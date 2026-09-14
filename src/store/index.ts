@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Game, Order, CartItem, StoreSettings } from '../types';
 import { seedGames } from '../data/games';
+import { uploadImage, uploadVideo, isSupabaseConfigured } from '../lib/supabase';
 
 // Helper para comprimir imágenes
 const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<string> => {
@@ -31,6 +32,16 @@ const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<s
     };
     img.onerror = () => resolve(base64);
     img.src = base64;
+  });
+};
+
+// Helper para convertir File a base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 };
 
@@ -92,6 +103,8 @@ interface AppState {
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Promise<void>;
   updateGame: (id: string, game: Partial<Game>) => Promise<void>;
   deleteGame: (id: string) => void;
+  uploadGameImage: (file: File) => Promise<string>;
+  uploadGameVideo: (file: File) => Promise<string>;
 
   // Cart
   cart: CartItem[];
@@ -108,6 +121,7 @@ interface AppState {
   // Store Settings
   storeSettings: StoreSettings;
   updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
+  uploadQRImage: (file: File) => Promise<string>;
 
   // Toast
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
@@ -222,6 +236,48 @@ export const useStore = create<AppState>()(
       deleteGame: (id) => {
         set(state => ({ games: state.games.filter(g => g.id !== id) }));
         get().addToast('Juego eliminado', 'info');
+      },
+
+      uploadGameImage: async (file: File): Promise<string> => {
+        try {
+          // Si Supabase está configurado, subir a la nube
+          if (isSupabaseConfigured()) {
+            const url = await uploadImage(file, 'games');
+            if (url) {
+              get().addToast('Imagen subida a la nube', 'success');
+              return url;
+            }
+          }
+          
+          // Fallback: comprimir y guardar en base64
+          const base64 = await fileToBase64(file);
+          const compressed = await compressImage(base64);
+          get().addToast('Imagen comprimida (Supabase no configurado)', 'info');
+          return compressed;
+        } catch (error) {
+          console.error('Error al subir imagen:', error);
+          throw error;
+        }
+      },
+
+      uploadGameVideo: async (file: File): Promise<string> => {
+        try {
+          // Los videos SOLO se pueden subir con Supabase
+          if (!isSupabaseConfigured()) {
+            throw new Error('Para subir videos necesitas configurar Supabase. Ve a /admin/settings');
+          }
+          
+          const url = await uploadVideo(file, 'videos');
+          if (url) {
+            get().addToast('Video subido a la nube', 'success');
+            return url;
+          }
+          
+          throw new Error('No se pudo subir el video');
+        } catch (error) {
+          console.error('Error al subir video:', error);
+          throw error;
+        }
       },
 
       // Cart State
@@ -345,6 +401,28 @@ export const useStore = create<AppState>()(
           },
         }));
         get().addToast('Configuración actualizada', 'success');
+      },
+
+      uploadQRImage: async (file: File): Promise<string> => {
+        try {
+          // Si Supabase está configurado, subir a la nube
+          if (isSupabaseConfigured()) {
+            const url = await uploadImage(file, 'qr');
+            if (url) {
+              get().addToast('QR subido a la nube', 'success');
+              return url;
+            }
+          }
+          
+          // Fallback: comprimir y guardar en base64
+          const base64 = await fileToBase64(file);
+          const compressed = await compressImage(base64, 400, 0.8);
+          get().addToast('QR comprimido (Supabase no configurado)', 'info');
+          return compressed;
+        } catch (error) {
+          console.error('Error al subir QR:', error);
+          throw error;
+        }
       },
 
       // Toast State

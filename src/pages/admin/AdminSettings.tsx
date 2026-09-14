@@ -8,9 +8,10 @@ export default function AdminSettings() {
   const [binanceWallet, setBinanceWallet] = useState(storeSettings.binanceWallet);
   const [binanceQRUrl, setBinanceQRUrl] = useState(storeSettings.binanceQRUrl);
   const [paypalEmail, setPaypalEmail] = useState(storeSettings.paypalEmail);
+  const [uploadingQR, setUploadingQR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleQRUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleQRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -21,11 +22,16 @@ export default function AdminSettings() {
         useStore.getState().addToast('La imagen no debe superar los 2MB', 'error');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBinanceQRUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      
+      setUploadingQR(true);
+      try {
+        const url = await useStore.getState().uploadQRImage(file);
+        setBinanceQRUrl(url);
+      } catch (error) {
+        useStore.getState().addToast('Error al subir el QR', 'error');
+      } finally {
+        setUploadingQR(false);
+      }
     }
   };
 
@@ -94,14 +100,23 @@ export default function AdminSettings() {
 
               {/* Upload */}
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !uploadingQR && fileInputRef.current?.click()}
                 className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-6 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
               >
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 font-medium">
-                  {binanceQRUrl ? 'Cambiar código QR' : 'Subir código QR'}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 2MB</p>
+                {uploadingQR ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-[#0070D1] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-gray-600 font-medium">Subiendo QR...</p>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 font-medium">
+                      {binanceQRUrl ? 'Cambiar código QR' : 'Subir código QR'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 2MB</p>
+                  </>
+                )}
               </div>
               <input
                 ref={fileInputRef}

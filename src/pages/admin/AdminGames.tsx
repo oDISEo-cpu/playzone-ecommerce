@@ -88,7 +88,10 @@ export default function AdminGames() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -99,11 +102,42 @@ export default function AdminGames() {
         useStore.getState().addToast('La imagen no debe superar los 5MB', 'error');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      setUploadingImage(true);
+      try {
+        const url = await useStore.getState().uploadGameImage(file);
+        setFormData({ ...formData, imageUrl: url });
+      } catch (error) {
+        useStore.getState().addToast('Error al subir la imagen', 'error');
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('video/')) {
+        useStore.getState().addToast('Por favor selecciona un archivo de video válido', 'error');
+        return;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        useStore.getState().addToast('El video no debe superar los 100MB', 'error');
+        return;
+      }
+      
+      setUploadingVideo(true);
+      try {
+        const url = await useStore.getState().uploadGameVideo(file);
+        setFormData({ ...formData, videoUrl: url, videoType: 'file' });
+      } catch (error) {
+        useStore.getState().addToast('Error al subir el video. Asegúrate de configurar Supabase.', 'error');
+      } finally {
+        setUploadingVideo(false);
+      }
     }
   };
 
@@ -427,6 +461,15 @@ export default function AdminGames() {
                   <div className="flex gap-2 mb-3">
                     <button
                       type="button"
+                      onClick={() => setFormData({ ...formData, videoType: 'file', videoUrl: '' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                        formData.videoType === 'file' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                      }`}
+                    >
+                      <Video className="w-3 h-3 inline mr-1" /> Archivo
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setFormData({ ...formData, videoType: 'youtube', videoUrl: '' })}
                       className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
                         formData.videoType === 'youtube' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
@@ -445,8 +488,24 @@ export default function AdminGames() {
                     </button>
                   </div>
 
-                  {/* Preview de video URL */}
-                  {formData.videoUrl && (
+                  {/* Preview de video */}
+                  {formData.videoUrl && formData.videoType === 'file' && (
+                    <div className="mb-3 relative">
+                      <video src={formData.videoUrl} className="w-full h-32 object-cover rounded-lg border border-[#E5E5E5]" controls />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, videoUrl: '' });
+                          if (videoInputRef.current) videoInputRef.current.value = '';
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {formData.videoUrl && (formData.videoType === 'youtube' || formData.videoType === 'vimeo') && (
                     <div className="mb-3 p-2 bg-gray-100 rounded-lg text-xs text-gray-600 break-all flex items-center justify-between gap-2">
                       <span className="truncate">URL: {formData.videoUrl}</span>
                       <button
@@ -459,16 +518,36 @@ export default function AdminGames() {
                     </div>
                   )}
 
-                  <input
-                    type="url"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    placeholder={`URL de ${formData.videoType === 'youtube' ? 'YouTube' : 'Vimeo'}...`}
-                    className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Pega la URL completa del video de {formData.videoType === 'youtube' ? 'YouTube' : 'Vimeo'}
-                  </p>
+                  {formData.videoType === 'file' ? (
+                    <div>
+                      <div
+                        onClick={() => videoInputRef.current?.click()}
+                        className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-3 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
+                      >
+                        {uploadingVideo ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#0070D1] border-t-transparent rounded-full animate-spin" />
+                            <p className="text-xs text-gray-600">Subiendo video...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <Video className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                            <p className="text-xs text-gray-600">Subir video (MP4, máx 100MB)</p>
+                            <p className="text-xs text-gray-400 mt-1">Requiere Supabase configurado</p>
+                          </>
+                        )}
+                      </div>
+                      <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                      placeholder={`URL de ${formData.videoType === 'youtube' ? 'YouTube' : 'Vimeo'}...`}
+                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                    />
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
