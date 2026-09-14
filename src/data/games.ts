@@ -11,6 +11,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=400&fit=crop',
     stock: 25,
+    isFeatured: true,
+    isNewRelease: false,
     createdAt: '2024-01-15T10:00:00Z',
   },
   {
@@ -23,6 +25,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=400&fit=crop',
     stock: 30,
+    isFeatured: false,
+    isNewRelease: true,
     createdAt: '2024-02-10T10:00:00Z',
   },
   {
@@ -35,6 +39,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=600&h=400&fit=crop',
     stock: 50,
+    isFeatured: true,
+    isNewRelease: true,
     createdAt: '2024-03-01T10:00:00Z',
   },
   {
@@ -47,6 +53,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=400&fit=crop',
     stock: 20,
+    isFeatured: true,
+    isNewRelease: false,
     createdAt: '2024-03-15T10:00:00Z',
   },
   {
@@ -59,6 +67,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b28?w=600&h=400&fit=crop',
     stock: 35,
+    isFeatured: true,
+    isNewRelease: false,
     createdAt: '2024-01-20T10:00:00Z',
   },
   {
@@ -71,6 +81,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&h=400&fit=crop',
     stock: 15,
+    isFeatured: false,
+    isNewRelease: false,
     createdAt: '2024-02-25T10:00:00Z',
   },
   {
@@ -83,6 +95,8 @@ export const seedGames: Game[] = [
     platform: 'PS4/PS5',
     imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&h=400&fit=crop',
     stock: 40,
+    isFeatured: false,
+    isNewRelease: true,
     createdAt: '2024-04-01T10:00:00Z',
   },
   {
@@ -95,6 +109,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&h=400&fit=crop',
     stock: 18,
+    isFeatured: true,
+    isNewRelease: false,
     createdAt: '2024-02-14T10:00:00Z',
   },
   {
@@ -107,6 +123,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&h=400&fit=crop',
     stock: 22,
+    isFeatured: false,
+    isNewRelease: true,
     createdAt: '2024-03-20T10:00:00Z',
   },
   {
@@ -119,6 +137,8 @@ export const seedGames: Game[] = [
     platform: 'PS5',
     imageUrl: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=400&fit=crop',
     stock: 28,
+    isFeatured: true,
+    isNewRelease: false,
     createdAt: '2024-01-05T10:00:00Z',
   },
 ];

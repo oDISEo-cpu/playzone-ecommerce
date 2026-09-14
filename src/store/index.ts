@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { User, Game, Order, CartItem } from '../types';
+import { User, Game, Order, CartItem, StoreSettings } from '../types';
 import { seedGames } from '../data/games';
 
 interface AppState {
@@ -30,6 +30,10 @@ interface AppState {
   createOrder: (paymentMethod: 'PAYPAL' | 'BINANCE', transactionId?: string) => string;
   updateOrderStatus: (orderId: string, status: 'PENDING' | 'COMPLETED' | 'FAILED') => void;
 
+  // Store Settings
+  storeSettings: StoreSettings;
+  updateStoreSettings: (settings: Partial<StoreSettings>) => void;
+
   // Toast
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -44,6 +48,15 @@ const adminUser: User = {
   name: 'Admin Master',
   role: 'ADMIN',
   createdAt: '2024-01-01T00:00:00Z',
+};
+
+// Initialize store settings
+const defaultStoreSettings: StoreSettings = {
+  id: 'settings-001',
+  binanceWallet: 'TXqH7kR3vP8mN5wL2jF9cB4dA6eY1hG3kM',
+  binanceQRUrl: '',
+  paypalEmail: 'payments@playzone.com',
+  updatedAt: new Date().toISOString(),
 };
 
 export const useStore = create<AppState>()(
@@ -195,7 +208,7 @@ export const useStore = create<AppState>()(
           cart: [],
         }));
 
-        get().addToast('¡Orden creada exitosamente!', 'success');
+        get().addToast('Orden creada exitosamente', 'success');
         return order.id;
       },
 
@@ -206,6 +219,20 @@ export const useStore = create<AppState>()(
           ),
         }));
         get().addToast(`Estado de orden actualizado a ${status}`, 'success');
+      },
+
+      // Store Settings
+      storeSettings: defaultStoreSettings,
+
+      updateStoreSettings: (settings) => {
+        set(state => ({
+          storeSettings: {
+            ...state.storeSettings,
+            ...settings,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+        get().addToast('Configuración actualizada', 'success');
       },
 
       // Toast State
@@ -233,6 +260,7 @@ export const useStore = create<AppState>()(
         games: state.games,
         cart: state.cart,
         orders: state.orders,
+        storeSettings: state.storeSettings,
       }),
     }
   )

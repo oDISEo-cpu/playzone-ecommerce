@@ -6,7 +6,7 @@ import { useStore } from '../store';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cart, currentUser, createOrder } = useStore();
+  const { cart, currentUser, createOrder, storeSettings } = useStore();
   const [paymentMethod, setPaymentMethod] = useState<'PAYPAL' | 'BINANCE'>('PAYPAL');
   const [binanceHash, setBinanceHash] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -168,13 +168,39 @@ export default function Checkout() {
               className="bg-white rounded-xl border border-[#E5E5E5] p-6"
             >
               <h3 className="font-semibold text-[#2D2D2D] mb-4">Pago con Binance (USDT)</h3>
+              
+              {/* QR Code */}
+              {storeSettings.binanceQRUrl && (
+                <div className="mb-4 flex flex-col items-center">
+                  <img
+                    src={storeSettings.binanceQRUrl}
+                    alt="QR de pago Binance"
+                    className="w-48 h-48 object-contain border border-[#E5E5E5] rounded-lg mb-2"
+                  />
+                  <p className="text-sm text-gray-600 text-center">
+                    Escanea el QR o copia la dirección
+                  </p>
+                </div>
+              )}
+
               <div className="bg-[#E8F1FB] rounded-lg p-4 mb-4">
                 <p className="text-sm text-gray-600 mb-2">
                   Realiza la transferencia USDT (TRC20) a la siguiente dirección:
                 </p>
-                <code className="block bg-white p-3 rounded text-xs text-[#2D2D2D] break-all">
-                  TXqH7kR3vP8mN5wL2jF9cB4dA6eY1hG3kM
-                </code>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-white p-3 rounded text-xs text-[#2D2D2D] break-all">
+                    {storeSettings.binanceWallet}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(storeSettings.binanceWallet);
+                      useStore.getState().addToast('Dirección copiada', 'success');
+                    }}
+                    className="px-3 py-2 bg-[#0070D1] text-white text-xs font-medium rounded-lg hover:bg-[#003791] transition-colors whitespace-nowrap"
+                  >
+                    Copiar
+                  </button>
+                </div>
                 <p className="text-sm text-gray-600 mt-2">
                   Monto exacto: <strong>${subtotal.toFixed(2)} USDT</strong>
                 </p>

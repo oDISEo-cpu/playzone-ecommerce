@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Star, Sparkles, Video, Film } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
 import { Game } from '../../types';
@@ -11,6 +11,7 @@ export default function AdminGames() {
   const { games, addGame, updateGame, deleteGame } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'featured' | 'new'>('all');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -20,8 +21,13 @@ export default function AdminGames() {
     platform: 'PS5',
     imageUrl: '',
     stock: 0,
+    isFeatured: false,
+    isNewRelease: false,
+    videoUrl: '',
+    videoType: 'file' as 'file' | 'youtube' | 'vimeo',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const openCreateForm = () => {
     setEditingGame(null);
@@ -34,6 +40,10 @@ export default function AdminGames() {
       platform: 'PS5',
       imageUrl: '',
       stock: 0,
+      isFeatured: false,
+      isNewRelease: false,
+      videoUrl: '',
+      videoType: 'file',
     });
     setShowForm(true);
   };
@@ -49,6 +59,10 @@ export default function AdminGames() {
       platform: game.platform,
       imageUrl: game.imageUrl,
       stock: game.stock,
+      isFeatured: game.isFeatured,
+      isNewRelease: game.isNewRelease,
+      videoUrl: game.videoUrl || '',
+      videoType: game.videoType || 'file',
     });
     setShowForm(true);
   };
@@ -56,7 +70,6 @@ export default function AdminGames() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar que haya una imagen
     if (!formData.imageUrl) {
       useStore.getState().addToast('Por favor sube una imagen del juego', 'error');
       return;
@@ -79,39 +92,87 @@ export default function AdminGames() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
         useStore.getState().addToast('Por favor selecciona un archivo de imagen válido', 'error');
         return;
       }
-
-      // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
         useStore.getState().addToast('La imagen no debe superar los 5MB', 'error');
         return;
       }
-
-      // Convertir a base64
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setFormData({ ...formData, imageUrl: base64 });
+        setFormData({ ...formData, imageUrl: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('video/')) {
+        useStore.getState().addToast('Por favor selecciona un archivo de video válido', 'error');
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        useStore.getState().addToast('El video no debe superar los 50MB', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, videoUrl: reader.result as string, videoType: 'file' });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const filteredGames = games.filter(game => {
+    if (filterType === 'featured') return game.isFeatured;
+    if (filterType === 'new') return game.isNewRelease;
+    return true;
+  });
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-xl font-bold text-[#2D2D2D]">Gestión de Juegos ({games.length})</h2>
-        <button
-          onClick={openCreateForm}
-          className="flex items-center gap-2 px-4 py-2 bg-[#003791] text-white rounded-lg text-sm font-medium hover:bg-[#0070D1] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Agregar Juego
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Filtros */}
+          <div className="flex bg-[#E8F1FB] rounded-lg p-1">
+            <button
+              onClick={() => setFilterType('all')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                filterType === 'all' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilterType('featured')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+                filterType === 'featured' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              <Star className="w-3 h-3" /> Ofertas
+            </button>
+            <button
+              onClick={() => setFilterType('new')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+                filterType === 'new' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+              }`}
+            >
+              <Sparkles className="w-3 h-3" /> Nuevos
+            </button>
+          </div>
+          <button
+            onClick={openCreateForm}
+            className="flex items-center gap-2 px-4 py-2 bg-[#003791] text-white rounded-lg text-sm font-medium hover:bg-[#0070D1] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar
+          </button>
+        </div>
       </div>
 
       {/* Games Table */}
@@ -122,14 +183,14 @@ export default function AdminGames() {
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Juego</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Categoría</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Plataforma</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Precio</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Stock</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Estado</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E5E5]">
-              {games.map(game => (
+              {filteredGames.map(game => (
                 <tr key={game.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -138,7 +199,6 @@ export default function AdminGames() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{game.category}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{game.platform}</td>
                   <td className="px-4 py-3">
                     <span className="text-sm font-medium text-[#2D2D2D]">${game.price.toFixed(2)}</span>
                     {game.discount > 0 && (
@@ -149,6 +209,28 @@ export default function AdminGames() {
                     <span className={`text-sm font-medium ${game.stock === 0 ? 'text-red-500' : game.stock < 10 ? 'text-yellow-500' : 'text-green-500'}`}>
                       {game.stock}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      {game.isFeatured && (
+                        <span className="flex items-center gap-1 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          <Star className="w-3 h-3" /> Oferta
+                        </span>
+                      )}
+                      {game.isNewRelease && (
+                        <span className="flex items-center gap-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                          <Sparkles className="w-3 h-3" /> Nuevo
+                        </span>
+                      )}
+                      {game.videoUrl && (
+                        <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                          <Video className="w-3 h-3" /> Video
+                        </span>
+                      )}
+                      {!game.isFeatured && !game.isNewRelease && !game.videoUrl && (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -276,53 +358,6 @@ export default function AdminGames() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Imagen del Juego</label>
-                  
-                  {/* Preview de imagen */}
-                  {formData.imageUrl && (
-                    <div className="mb-3 relative">
-                      <img
-                        src={formData.imageUrl}
-                        alt="Preview"
-                        className="w-full h-40 object-cover rounded-lg border border-[#E5E5E5]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, imageUrl: '' });
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = '';
-                          }
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Input de archivo */}
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-6 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
-                  >
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 font-medium">
-                      {formData.imageUrl ? 'Cambiar imagen' : 'Haz clic para subir una imagen'}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB</p>
-                  </div>
-                  
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Stock</label>
                   <input
                     type="number"
@@ -334,19 +369,160 @@ export default function AdminGames() {
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="flex-1 py-2.5 border border-[#E5E5E5] text-[#2D2D2D] font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                {/* Toggles para Featured y New Release */}
+                <div className="space-y-3 p-4 bg-[#E8F1FB] rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Ofertas Especiales</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        formData.isFeatured ? 'bg-red-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          formData.isFeatured ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-yellow-500" />
+                      <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Nuevos Lanzamientos</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isNewRelease: !formData.isNewRelease })}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        formData.isNewRelease ? 'bg-yellow-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          formData.isNewRelease ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Imagen del Juego */}
+                <div>
+                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Imagen del Juego</label>
+                  {formData.imageUrl && (
+                    <div className="mb-3 relative">
+                      <img src={formData.imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-lg border border-[#E5E5E5]" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, imageUrl: '' });
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-4 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
                   >
+                    <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                    <p className="text-xs text-gray-600">{formData.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}</p>
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </div>
+
+                {/* Video del Juego */}
+                <div>
+                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Video (opcional)</label>
+                  
+                  {/* Tipo de video */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, videoType: 'file', videoUrl: '' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                        formData.videoType === 'file' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                      }`}
+                    >
+                      <Film className="w-3 h-3 inline mr-1" /> Archivo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, videoType: 'youtube', videoUrl: '' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                        formData.videoType === 'youtube' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                      }`}
+                    >
+                      YouTube
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, videoType: 'vimeo', videoUrl: '' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                        formData.videoType === 'vimeo' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                      }`}
+                    >
+                      Vimeo
+                    </button>
+                  </div>
+
+                  {/* Preview de video */}
+                  {formData.videoUrl && formData.videoType === 'file' && (
+                    <div className="mb-3 relative">
+                      <video src={formData.videoUrl} className="w-full h-32 object-cover rounded-lg border border-[#E5E5E5]" controls />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, videoUrl: '' });
+                          if (videoInputRef.current) videoInputRef.current.value = '';
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {formData.videoUrl && (formData.videoType === 'youtube' || formData.videoType === 'vimeo') && (
+                    <div className="mb-3 p-2 bg-gray-100 rounded-lg text-xs text-gray-600 break-all">
+                      URL: {formData.videoUrl}
+                    </div>
+                  )}
+
+                  {formData.videoType === 'file' ? (
+                    <div
+                      onClick={() => videoInputRef.current?.click()}
+                      className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-3 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
+                    >
+                      <Video className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-600">{formData.videoUrl ? 'Cambiar video' : 'Subir video (MP4, máx 50MB)'}</p>
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                      placeholder={`URL de ${formData.videoType === 'youtube' ? 'YouTube' : 'Vimeo'}...`}
+                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                    />
+                  )}
+                  <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-[#E5E5E5] text-[#2D2D2D] font-medium rounded-lg hover:bg-gray-50">
                     Cancelar
                   </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 bg-[#003791] text-white font-medium rounded-lg hover:bg-[#0070D1] transition-colors"
-                  >
-                    {editingGame ? 'Guardar Cambios' : 'Crear Juego'}
+                  <button type="submit" className="flex-1 py-2.5 bg-[#003791] text-white font-medium rounded-lg hover:bg-[#0070D1]">
+                    {editingGame ? 'Guardar' : 'Crear'}
                   </button>
                 </div>
               </form>

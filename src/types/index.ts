@@ -19,7 +19,19 @@ export interface Game {
   platform: string;
   imageUrl: string;
   stock: number;
+  isFeatured: boolean;
+  isNewRelease: boolean;
+  videoUrl?: string;
+  videoType?: 'file' | 'youtube' | 'vimeo';
   createdAt: string;
+}
+
+export interface StoreSettings {
+  id: string;
+  binanceWallet: string;
+  binanceQRUrl: string;
+  paypalEmail: string;
+  updatedAt: string;
 }
 
 export interface OrderItem {
