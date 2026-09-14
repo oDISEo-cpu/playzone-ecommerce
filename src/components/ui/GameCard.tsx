@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Star, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Game } from '../../types';
 import { useStore } from '../../store';
@@ -42,10 +42,20 @@ export default function GameCard({ game, index = 0 }: GameCardProps) {
             <span className="text-white font-bold text-lg">SIN STOCK</span>
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
           <span className="bg-[#003791] text-white text-xs font-medium px-2 py-1 rounded-md">
             {game.platform}
           </span>
+          {game.isFeatured && (
+            <span className="flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+              <Star className="w-3 h-3" /> Oferta
+            </span>
+          )}
+          {game.isNewRelease && (
+            <span className="flex items-center gap-1 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+              <Sparkles className="w-3 h-3" /> Nuevo
+            </span>
+          )}
         </div>
       </Link>
 

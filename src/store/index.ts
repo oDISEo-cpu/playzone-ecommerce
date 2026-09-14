@@ -1,8 +1,94 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { User, Game, Order, CartItem } from '../types';
+import { User, Game, Order, CartItem, StoreSettings } from '../types';
 import { seedGames } from '../data/games';
+import { uploadImage, uploadVideo, isSupabaseConfigured } from '../lib/supabase';
+
+// Helper para comprimir imágenes
+const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      } else {
+        resolve(base64);
+      }
+    };
+    img.onerror = () => resolve(base64);
+    img.src = base64;
+  });
+};
+
+// Helper para convertir File a base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// Storage con manejo de errores
+const createSafeStorage = () => {
+  let useMemory = false;
+  const memoryStorage: Record<string, string> = {};
+
+  return {
+    getItem: (key: string): string | null => {
+      if (useMemory) {
+        return memoryStorage[key] || null;
+      }
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        useMemory = true;
+        return memoryStorage[key] || null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      if (useMemory) {
+        memoryStorage[key] = value;
+        return;
+      }
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.warn('localStorage lleno, usando almacenamiento en memoria');
+        useMemory = true;
+        memoryStorage[key] = value;
+      }
+    },
+    removeItem: (key: string): void => {
+      if (useMemory) {
+        delete memoryStorage[key];
+        return;
+      }
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        useMemory = true;
+        delete memoryStorage[key];
+      }
+    },
+  };
+};
 
 interface AppState {
   // Auth
@@ -14,9 +100,11 @@ interface AppState {
 
   // Games
   games: Game[];
-  addGame: (game: Omit<Game, 'id' | 'createdAt'>) => void;
-  updateGame: (id: string, game: Partial<Game>) => void;
+  addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Promise<void>;
+  updateGame: (id: string, game: Partial<Game>) => Promise<void>;
   deleteGame: (id: string) => void;
+  uploadGameImage: (file: File) => Promise<string>;
+  uploadGameVideo: (file: File) => Promise<string>;
 
   // Cart
   cart: CartItem[];
@@ -29,6 +117,11 @@ interface AppState {
   orders: Order[];
   createOrder: (paymentMethod: 'PAYPAL' | 'BINANCE', transactionId?: string) => string;
   updateOrderStatus: (orderId: string, status: 'PENDING' | 'COMPLETED' | 'FAILED') => void;
+
+  // Store Settings
+  storeSettings: StoreSettings;
+  updateStoreSettings: (settings: Partial<StoreSettings>) => Promise<void>;
+  uploadQRImage: (file: File) => Promise<string>;
 
   // Toast
   toasts: { id: string; message: string; type: 'success' | 'error' | 'info' }[];
@@ -44,6 +137,15 @@ const adminUser: User = {
   name: 'Admin Master',
   role: 'ADMIN',
   createdAt: '2024-01-01T00:00:00Z',
+};
+
+// Initialize store settings
+const defaultStoreSettings: StoreSettings = {
+  id: 'settings-001',
+  binanceWallet: 'TXqH7kR3vP8mN5wL2jF9cB4dA6eY1hG3kM',
+  binanceQRUrl: '',
+  paypalEmail: 'payments@playzone.com',
+  updatedAt: new Date().toISOString(),
 };
 
 export const useStore = create<AppState>()(
@@ -84,9 +186,24 @@ export const useStore = create<AppState>()(
       // Games State
       games: seedGames,
 
-      addGame: (game) => {
+      addGame: async (game) => {
+        // Comprimir imagen si es base64
+        let imageUrl = game.imageUrl;
+        if (imageUrl.startsWith('data:image')) {
+          imageUrl = await compressImage(imageUrl);
+        }
+
+        // NO guardar videos en base64 (solo URLs)
+        let videoUrl = game.videoUrl || '';
+        if (videoUrl.startsWith('data:video')) {
+          videoUrl = '';
+          get().addToast('Los videos locales no se guardan. Usa URLs externas de YouTube/Vimeo', 'info');
+        }
+
         const newGame: Game = {
           ...game,
+          imageUrl,
+          videoUrl,
           id: uuidv4(),
           createdAt: new Date().toISOString(),
         };
@@ -94,7 +211,22 @@ export const useStore = create<AppState>()(
         get().addToast('Juego agregado exitosamente', 'success');
       },
 
-      updateGame: (id, updates) => {
+      updateGame: async (id, updates) => {
+        // Comprimir imagen si es base64
+        let imageUrl = updates.imageUrl;
+        if (imageUrl && imageUrl.startsWith('data:image')) {
+          imageUrl = await compressImage(imageUrl);
+          updates = { ...updates, imageUrl };
+        }
+
+        // NO guardar videos en base64
+        let videoUrl = updates.videoUrl;
+        if (videoUrl && videoUrl.startsWith('data:video')) {
+          videoUrl = '';
+          updates = { ...updates, videoUrl };
+          get().addToast('Los videos locales no se guardan. Usa URLs externas de YouTube/Vimeo', 'info');
+        }
+
         set(state => ({
           games: state.games.map(g => g.id === id ? { ...g, ...updates } : g),
         }));
@@ -104,6 +236,48 @@ export const useStore = create<AppState>()(
       deleteGame: (id) => {
         set(state => ({ games: state.games.filter(g => g.id !== id) }));
         get().addToast('Juego eliminado', 'info');
+      },
+
+      uploadGameImage: async (file: File): Promise<string> => {
+        try {
+          // Si Supabase está configurado, subir a la nube
+          if (isSupabaseConfigured()) {
+            const url = await uploadImage(file, 'games');
+            if (url) {
+              get().addToast('Imagen subida a la nube', 'success');
+              return url;
+            }
+          }
+          
+          // Fallback: comprimir y guardar en base64
+          const base64 = await fileToBase64(file);
+          const compressed = await compressImage(base64);
+          get().addToast('Imagen comprimida (Supabase no configurado)', 'info');
+          return compressed;
+        } catch (error) {
+          console.error('Error al subir imagen:', error);
+          throw error;
+        }
+      },
+
+      uploadGameVideo: async (file: File): Promise<string> => {
+        try {
+          // Los videos SOLO se pueden subir con Supabase
+          if (!isSupabaseConfigured()) {
+            throw new Error('Para subir videos necesitas configurar Supabase. Ve a /admin/settings');
+          }
+          
+          const url = await uploadVideo(file, 'videos');
+          if (url) {
+            get().addToast('Video subido a la nube', 'success');
+            return url;
+          }
+          
+          throw new Error('No se pudo subir el video');
+        } catch (error) {
+          console.error('Error al subir video:', error);
+          throw error;
+        }
       },
 
       // Cart State
@@ -195,7 +369,7 @@ export const useStore = create<AppState>()(
           cart: [],
         }));
 
-        get().addToast('¡Orden creada exitosamente!', 'success');
+        get().addToast('Orden creada exitosamente', 'success');
         return order.id;
       },
 
@@ -206,6 +380,49 @@ export const useStore = create<AppState>()(
           ),
         }));
         get().addToast(`Estado de orden actualizado a ${status}`, 'success');
+      },
+
+      // Store Settings
+      storeSettings: defaultStoreSettings,
+
+      updateStoreSettings: async (settings) => {
+        // Comprimir QR si es base64
+        let binanceQRUrl = settings.binanceQRUrl;
+        if (binanceQRUrl && binanceQRUrl.startsWith('data:image')) {
+          binanceQRUrl = await compressImage(binanceQRUrl, 400, 0.8);
+          settings = { ...settings, binanceQRUrl };
+        }
+
+        set(state => ({
+          storeSettings: {
+            ...state.storeSettings,
+            ...settings,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+        get().addToast('Configuración actualizada', 'success');
+      },
+
+      uploadQRImage: async (file: File): Promise<string> => {
+        try {
+          // Si Supabase está configurado, subir a la nube
+          if (isSupabaseConfigured()) {
+            const url = await uploadImage(file, 'qr');
+            if (url) {
+              get().addToast('QR subido a la nube', 'success');
+              return url;
+            }
+          }
+          
+          // Fallback: comprimir y guardar en base64
+          const base64 = await fileToBase64(file);
+          const compressed = await compressImage(base64, 400, 0.8);
+          get().addToast('QR comprimido (Supabase no configurado)', 'info');
+          return compressed;
+        } catch (error) {
+          console.error('Error al subir QR:', error);
+          throw error;
+        }
       },
 
       // Toast State
@@ -227,12 +444,34 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'playzone-store',
+      storage: createJSONStorage(createSafeStorage),
+      // Solo persistir datos esenciales, NO videos ni imágenes grandes
       partialize: (state) => ({
         currentUser: state.currentUser,
         users: state.users,
-        games: state.games,
+        games: state.games.map(g => ({
+          ...g,
+          // Mantener URLs pero no base64 de videos
+          videoUrl: g.videoUrl && !g.videoUrl.startsWith('data:') ? g.videoUrl : '',
+        })),
         cart: state.cart,
-        orders: state.orders,
+        orders: state.orders.map(o => ({
+          ...o,
+          items: o.items.map(item => ({
+            ...item,
+            game: {
+              ...item.game,
+              videoUrl: item.game.videoUrl && !item.game.videoUrl.startsWith('data:') ? item.game.videoUrl : '',
+            },
+          })),
+        })),
+        storeSettings: {
+          ...state.storeSettings,
+          // No persistir QR en base64
+          binanceQRUrl: state.storeSettings.binanceQRUrl && !state.storeSettings.binanceQRUrl.startsWith('data:')
+            ? state.storeSettings.binanceQRUrl
+            : '',
+        },
       }),
     }
   )

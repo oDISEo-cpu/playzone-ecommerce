@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Gamepad2, Users, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Users, ShoppingBag, ArrowLeft, Settings } from 'lucide-react';
 import { useStore } from '../../store';
 
 export default function AdminLayout() {
@@ -24,6 +24,7 @@ export default function AdminLayout() {
     { path: '/admin/games', label: 'Juegos', icon: Gamepad2 },
     { path: '/admin/users', label: 'Usuarios', icon: Users },
     { path: '/admin/orders', label: 'Órdenes', icon: ShoppingBag },
+    { path: '/admin/settings', label: 'Configuración', icon: Settings },
   ];
 
   return (

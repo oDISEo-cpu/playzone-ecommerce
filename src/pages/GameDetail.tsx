@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Shield, Download, Star } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Shield, Download, Star, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
 
@@ -53,6 +53,19 @@ export default function GameDetail() {
               -{game.discount}% OFF
             </span>
           )}
+          {/* Badges */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            {game.isFeatured && (
+              <span className="flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+                <Star className="w-3 h-3" /> Oferta Especial
+              </span>
+            )}
+            {game.isNewRelease && (
+              <span className="flex items-center gap-1 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+                <Sparkles className="w-3 h-3" /> Nuevo Lanzamiento
+              </span>
+            )}
+          </div>
         </motion.div>
 
         {/* Details */}

@@ -8,6 +8,13 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Fondo degradado PlayZone */
+.bg-gradient-playzone {
+  background: linear-gradient(180deg, #E8F1FB 0%, #F0F6FC 25%, #F7FAFD 50%, #FFFFFF 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

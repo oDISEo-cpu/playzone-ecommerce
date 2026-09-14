@@ -5,7 +5,7 @@ import ToastContainer from '../ui/ToastContainer';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+    <div className="min-h-screen flex flex-col bg-gradient-playzone">
       <Header />
       <main className="flex-1">
         <Outlet />

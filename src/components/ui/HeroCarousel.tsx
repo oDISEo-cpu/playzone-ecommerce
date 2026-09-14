@@ -8,13 +8,21 @@ import { useStore } from '../../store';
 export default function HeroCarousel() {
   const { games } = useStore();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const featuredGames = games.filter(g => g.discount > 0 || g.stock > 20).slice(0, 5);
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % featuredGames.length);
-    }, 5000);
+    }, 7000);
     return () => clearInterval(interval);
   }, [featuredGames.length]);
 
@@ -28,6 +36,84 @@ export default function HeroCarousel() {
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % featuredGames.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + featuredGames.length) % featuredGames.length);
 
+  const getYouTubeEmbedUrl = (url: string) => {
+    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1];
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&playlist=${videoId}` : '';
+  };
+
+  const getVimeoEmbedUrl = (url: string) => {
+    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1];
+    return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1` : '';
+  };
+
+  const renderBackground = (game: Game) => {
+    // En mobile, siempre usar imagen para ahorrar datos
+    if (isMobile || !game.videoUrl) {
+      return (
+        <img
+          src={game.imageUrl}
+          alt={game.title}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+
+    // Video file
+    if (game.videoType === 'file') {
+      return (
+        <video
+          src={game.videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+
+    // YouTube
+    if (game.videoType === 'youtube') {
+      const embedUrl = getYouTubeEmbedUrl(game.videoUrl);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full object-cover pointer-events-none"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title={game.title}
+          />
+        );
+      }
+    }
+
+    // Vimeo
+    if (game.videoType === 'vimeo') {
+      const embedUrl = getVimeoEmbedUrl(game.videoUrl);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full object-cover pointer-events-none"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            title={game.title}
+          />
+        );
+      }
+    }
+
+    // Fallback to image
+    return (
+      <img
+        src={game.imageUrl}
+        alt={game.title}
+        className="w-full h-full object-cover"
+      />
+    );
+  };
+
   return (
     <div className="relative overflow-hidden rounded-2xl mx-4 sm:mx-0">
       <div className="relative h-[300px] sm:h-[400px] md:h-[500px]">
@@ -40,11 +126,7 @@ export default function HeroCarousel() {
             transition={{ duration: 0.5 }}
             className="absolute inset-0"
           >
-            <img
-              src={currentGame.imageUrl}
-              alt={currentGame.title}
-              className="w-full h-full object-cover"
-            />
+            {renderBackground(currentGame)}
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
           </motion.div>
         </AnimatePresence>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Gamepad2, Swords, Trophy, Compass, Skull, Palette } from 'lucide-react';
+import { Gamepad2, Swords, Trophy, Compass, Skull, Palette, Flame, Sparkles } from 'lucide-react';
 import HeroCarousel from '../components/ui/HeroCarousel';
 import GameCard from '../components/ui/GameCard';
 import { useStore } from '../store';
@@ -17,8 +17,17 @@ const categories = [
 export default function Home() {
   const { games } = useStore();
 
-  const featuredGames = games.filter(g => g.discount > 0).slice(0, 4);
-  const newGames = [...games].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+  // Ofertas Especiales: isFeatured = true Y discount > 0
+  const featuredGames = games
+    .filter(g => g.isFeatured && g.discount > 0)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
+
+  // Nuevos Lanzamientos: isNewRelease = true
+  const newReleaseGames = games
+    .filter(g => g.isNewRelease)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
 
   return (
     <div>
@@ -52,16 +61,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured / Offers */}
+      {/* Ofertas Especiales */}
       {featuredGames.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#2D2D2D]">🔥 Ofertas Especiales</h2>
+            <div className="flex items-center gap-2">
+              <Flame className="w-6 h-6 text-red-500" />
+              <h2 className="text-2xl font-bold text-[#2D2D2D]">Ofertas Especiales</h2>
+            </div>
             <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
-              Ver todos →
+              Ver todos
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {featuredGames.map((game, idx) => (
               <GameCard key={game.id} game={game} index={idx} />
             ))}
@@ -69,20 +81,25 @@ export default function Home() {
         </section>
       )}
 
-      {/* New Arrivals */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#2D2D2D]">✨ Nuevos Lanzamientos</h2>
-          <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
-            Ver todos →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {newGames.map((game, idx) => (
-            <GameCard key={game.id} game={game} index={idx} />
-          ))}
-        </div>
-      </section>
+      {/* Nuevos Lanzamientos */}
+      {newReleaseGames.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-2xl font-bold text-[#2D2D2D]">Nuevos Lanzamientos</h2>
+            </div>
+            <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
+              Ver todos
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {newReleaseGames.map((game, idx) => (
+              <GameCard key={game.id} game={game} index={idx} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Banner */}
       <section className="bg-[#003791] py-16">
