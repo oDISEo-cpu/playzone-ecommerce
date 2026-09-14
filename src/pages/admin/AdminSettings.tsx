@@ -29,8 +29,8 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSave = () => {
-    updateStoreSettings({
+  const handleSave = async () => {
+    await updateStoreSettings({
       binanceWallet,
       binanceQRUrl,
       paypalEmail,
