@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
 import { Game } from '../../types';
@@ -21,6 +21,7 @@ export default function AdminGames() {
     imageUrl: '',
     stock: 0,
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openCreateForm = () => {
     setEditingGame(null);
@@ -54,6 +55,13 @@ export default function AdminGames() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar que haya una imagen
+    if (!formData.imageUrl) {
+      useStore.getState().addToast('Por favor sube una imagen del juego', 'error');
+      return;
+    }
+    
     if (editingGame) {
       updateGame(editingGame.id, formData);
     } else {
@@ -65,6 +73,31 @@ export default function AdminGames() {
   const handleDelete = (id: string) => {
     if (confirm('¿Estás seguro de eliminar este juego?')) {
       deleteGame(id);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        useStore.getState().addToast('Por favor selecciona un archivo de imagen válido', 'error');
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        useStore.getState().addToast('La imagen no debe superar los 5MB', 'error');
+        return;
+      }
+
+      // Convertir a base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setFormData({ ...formData, imageUrl: base64 });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -243,14 +276,49 @@ export default function AdminGames() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">URL de Imagen</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Imagen del Juego</label>
+                  
+                  {/* Preview de imagen */}
+                  {formData.imageUrl && (
+                    <div className="mb-3 relative">
+                      <img
+                        src={formData.imageUrl}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-lg border border-[#E5E5E5]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, imageUrl: '' });
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Input de archivo */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-6 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
+                  >
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 font-medium">
+                      {formData.imageUrl ? 'Cambiar imagen' : 'Haz clic para subir una imagen'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB</p>
+                  </div>
+                  
                   <input
-                    type="url"
-                    required
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
                   />
                 </div>
 
