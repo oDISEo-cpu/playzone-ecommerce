@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Upload, Star, Sparkles, Video, Calendar } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Star, Sparkles, Video, Calendar, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
 import { Game } from '../../types';
@@ -23,8 +23,9 @@ export default function AdminGames() {
     stock: 0,
     isFeatured: false,
     isNewRelease: false,
-    isPreOrder: false,       // ✅ AGREGAR
-    releaseDate: '',         // ✅ AGREGAR
+    isHeroBanner: false,  // ✅ AGREGAR
+    isPreOrder: false,
+    releaseDate: '',
     videoUrl: '',
     videoType: 'file' as 'file' | 'youtube' | 'vimeo',
   });
@@ -43,8 +44,9 @@ export default function AdminGames() {
       stock: 0,
       isFeatured: false,
       isNewRelease: false,
-      isPreOrder: false,       // ✅ AGREGAR
-      releaseDate: '',         // ✅ AGREGAR
+      isHeroBanner: false,  // ✅ AGREGAR
+      isPreOrder: false,
+      releaseDate: '',
       videoUrl: '',
       videoType: 'file',
     });
@@ -64,8 +66,9 @@ export default function AdminGames() {
       stock: game.stock,
       isFeatured: game.isFeatured,
       isNewRelease: game.isNewRelease,
-      isPreOrder: game.isPreOrder || false,       // ✅ AGREGADO
-      releaseDate: game.releaseDate || '',        // ✅ AGREGADO
+      isHeroBanner: game.isHeroBanner || false,  // ✅ AGREGAR
+      isPreOrder: game.isPreOrder || false,
+      releaseDate: game.releaseDate || '',
       videoUrl: game.videoUrl || '',
       videoType: game.videoType || 'file',
     });
@@ -429,6 +432,27 @@ export default function AdminGames() {
                       />
                     </button>
                   </div>
+                </div>
+
+                {/* Toggle para Banner Principal */}
+                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Banner Principal</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isHeroBanner: !formData.isHeroBanner })}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      formData.isHeroBanner ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        formData.isHeroBanner ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
                 </div>
 
                                 {/* Toggle para Pre-Venta */}

@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { Game } from '../types';
 
 // Convertir formato de Supabase a formato de la app
+// Convertir formato de Supabase a formato de la app
 const mapGameFromDB = (dbGame: any): Game => ({
   id: dbGame.id,
   title: dbGame.title,
@@ -14,6 +15,7 @@ const mapGameFromDB = (dbGame: any): Game => ({
   stock: dbGame.stock || 0,
   isFeatured: dbGame.is_featured || false,
   isNewRelease: dbGame.is_new_release || false,
+  isHeroBanner: dbGame.is_hero_banner || false,  // ✅ AGREGAR
   videoUrl: dbGame.video_url || '',
   videoType: dbGame.video_type || 'file',
   isPreOrder: dbGame.is_pre_order || false,
@@ -33,6 +35,7 @@ const mapGameToDB = (game: Partial<Game>) => ({
   stock: game.stock || 0,
   is_featured: game.isFeatured || false,
   is_new_release: game.isNewRelease || false,
+  is_hero_banner: game.isHeroBanner || false,  // ✅ AGREGAR
   video_url: game.videoUrl || null,
   video_type: game.videoType || 'file',
   is_pre_order: game.isPreOrder || false,
