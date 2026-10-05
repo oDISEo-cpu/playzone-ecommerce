@@ -10,9 +10,9 @@ export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Antes estaba: .filter(g => g.isFeatured)
+  // Filtra SOLO los juegos marcados para el banner Y que tengan un video asignado
   const featuredGames = games
-    .filter(g => g.isHeroBanner && g.videoUrl) // ✅ Ahora usa isHeroBanner y verifica que tenga video
+    .filter(g => g.isHeroBanner && g.videoUrl)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
@@ -26,7 +26,7 @@ export default function HeroCarousel() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % featuredGames.length);
-    }, 15000);
+    }, 15000); // 15 segundos por cada video
     return () => clearInterval(interval);
   }, [featuredGames.length]);
 
@@ -62,7 +62,7 @@ export default function HeroCarousel() {
       );
     }
 
-    // Video file
+    // Video file (Supabase)
     if (game.videoType === 'file') {
       return (
         <video
@@ -108,7 +108,7 @@ export default function HeroCarousel() {
       }
     }
 
-    // Fallback to image
+    // Fallback a imagen si algo falla
     return (
       <img
         src={game.imageUrl}
