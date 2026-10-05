@@ -10,7 +10,10 @@ export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  const featuredGames = games.filter(g => g.discount > 0 || g.stock > 20).slice(0, 5);
+  const featuredGames = games
+  .filter(g => g.isFeatured) // Solo muestra los que tú marques como destacados
+  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  .slice(0, 5);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -22,7 +25,7 @@ export default function HeroCarousel() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % featuredGames.length);
-    }, 7000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [featuredGames.length]);
 

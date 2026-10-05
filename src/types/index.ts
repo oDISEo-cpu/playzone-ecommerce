@@ -23,6 +23,8 @@ export interface Game {
   isNewRelease: boolean;
   videoUrl?: string;
   videoType?: 'file' | 'youtube' | 'vimeo';
+  isPreOrder: boolean;       // ✅ AGREGAR
+  releaseDate?: string;      // ✅ AGREGAR
   createdAt: string;
 }
 

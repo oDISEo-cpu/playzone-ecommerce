@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Upload, Star, Sparkles, Video } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Star, Sparkles, Video, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
 import { Game } from '../../types';
@@ -23,6 +23,8 @@ export default function AdminGames() {
     stock: 0,
     isFeatured: false,
     isNewRelease: false,
+    isPreOrder: false,       // ✅ AGREGAR
+    releaseDate: '',         // ✅ AGREGAR
     videoUrl: '',
     videoType: 'file' as 'file' | 'youtube' | 'vimeo',
   });
@@ -41,6 +43,8 @@ export default function AdminGames() {
       stock: 0,
       isFeatured: false,
       isNewRelease: false,
+      isPreOrder: false,       // ✅ AGREGAR
+      releaseDate: '',         // ✅ AGREGAR
       videoUrl: '',
       videoType: 'file',
     });
@@ -60,6 +64,8 @@ export default function AdminGames() {
       stock: game.stock,
       isFeatured: game.isFeatured,
       isNewRelease: game.isNewRelease,
+      isPreOrder: game.isPreOrder || false,       // ✅ AGREGADO
+      releaseDate: game.releaseDate || '',        // ✅ AGREGADO
       videoUrl: game.videoUrl || '',
       videoType: game.videoType || 'file',
     });
@@ -424,6 +430,42 @@ export default function AdminGames() {
                     </button>
                   </div>
                 </div>
+
+                                {/* Toggle para Pre-Venta */}
+                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-purple-500" />
+                    <span className="text-sm font-medium text-[#2D2D2D]">Disponible en Pre-Venta</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isPreOrder: !formData.isPreOrder })}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      formData.isPreOrder ? 'bg-purple-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        formData.isPreOrder ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Fecha de Lanzamiento (solo si es Pre-Venta) */}
+                {formData.isPreOrder && (
+                  <div>
+                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">
+                      Fecha de Lanzamiento
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.releaseDate}
+                      onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
+                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                )}
 
                 {/* Imagen del Juego */}
                 <div>

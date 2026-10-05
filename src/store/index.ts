@@ -187,13 +187,11 @@ export const useStore = create<AppState>()(
       games: seedGames,
 
       addGame: async (game) => {
-        // Comprimir imagen si es base64
         let imageUrl = game.imageUrl;
         if (imageUrl.startsWith('data:image')) {
           imageUrl = await compressImage(imageUrl);
         }
 
-        // NO guardar videos en base64 (solo URLs)
         let videoUrl = game.videoUrl || '';
         if (videoUrl.startsWith('data:video')) {
           videoUrl = '';
@@ -204,22 +202,23 @@ export const useStore = create<AppState>()(
           ...game,
           imageUrl,
           videoUrl,
+          isPreOrder: game.isPreOrder || false,
+          releaseDate: game.releaseDate || '',
           id: uuidv4(),
           createdAt: new Date().toISOString(),
         };
+        
         set(state => ({ games: [...state.games, newGame] }));
         get().addToast('Juego agregado exitosamente', 'success');
       },
 
       updateGame: async (id, updates) => {
-        // Comprimir imagen si es base64
         let imageUrl = updates.imageUrl;
         if (imageUrl && imageUrl.startsWith('data:image')) {
           imageUrl = await compressImage(imageUrl);
           updates = { ...updates, imageUrl };
         }
 
-        // NO guardar videos en base64
         let videoUrl = updates.videoUrl;
         if (videoUrl && videoUrl.startsWith('data:video')) {
           videoUrl = '';
@@ -228,7 +227,12 @@ export const useStore = create<AppState>()(
         }
 
         set(state => ({
-          games: state.games.map(g => g.id === id ? { ...g, ...updates } : g),
+          games: state.games.map(g => g.id === id ? { 
+            ...g, 
+            ...updates,
+            isPreOrder: updates.isPreOrder !== undefined ? updates.isPreOrder : g.isPreOrder,
+            releaseDate: updates.releaseDate !== undefined ? updates.releaseDate : g.releaseDate,
+          } : g),
         }));
         get().addToast('Juego actualizado exitosamente', 'success');
       },
@@ -240,7 +244,6 @@ export const useStore = create<AppState>()(
 
       uploadGameImage: async (file: File): Promise<string> => {
         try {
-          // Si Supabase está configurado, subir a la nube
           if (isSupabaseConfigured()) {
             const url = await uploadImage(file, 'games');
             if (url) {
@@ -249,7 +252,6 @@ export const useStore = create<AppState>()(
             }
           }
           
-          // Fallback: comprimir y guardar en base64
           const base64 = await fileToBase64(file);
           const compressed = await compressImage(base64);
           get().addToast('Imagen comprimida (Supabase no configurado)', 'info');
@@ -262,7 +264,6 @@ export const useStore = create<AppState>()(
 
       uploadGameVideo: async (file: File): Promise<string> => {
         try {
-          // Los videos SOLO se pueden subir con Supabase
           if (!isSupabaseConfigured()) {
             throw new Error('Para subir videos necesitas configurar Supabase. Ve a /admin/settings');
           }
@@ -356,7 +357,6 @@ export const useStore = create<AppState>()(
           })),
         };
 
-        // Decrease stock
         set(state => ({
           orders: [...state.orders, order],
           games: state.games.map(g => {
@@ -386,7 +386,6 @@ export const useStore = create<AppState>()(
       storeSettings: defaultStoreSettings,
 
       updateStoreSettings: async (settings) => {
-        // Comprimir QR si es base64
         let binanceQRUrl = settings.binanceQRUrl;
         if (binanceQRUrl && binanceQRUrl.startsWith('data:image')) {
           binanceQRUrl = await compressImage(binanceQRUrl, 400, 0.8);
@@ -405,7 +404,6 @@ export const useStore = create<AppState>()(
 
       uploadQRImage: async (file: File): Promise<string> => {
         try {
-          // Si Supabase está configurado, subir a la nube
           if (isSupabaseConfigured()) {
             const url = await uploadImage(file, 'qr');
             if (url) {
@@ -414,7 +412,6 @@ export const useStore = create<AppState>()(
             }
           }
           
-          // Fallback: comprimir y guardar en base64
           const base64 = await fileToBase64(file);
           const compressed = await compressImage(base64, 400, 0.8);
           get().addToast('QR comprimido (Supabase no configurado)', 'info');
@@ -445,13 +442,11 @@ export const useStore = create<AppState>()(
     {
       name: 'playzone-store',
       storage: createJSONStorage(createSafeStorage),
-      // Solo persistir datos esenciales, NO videos ni imágenes grandes
       partialize: (state) => ({
         currentUser: state.currentUser,
         users: state.users,
         games: state.games.map(g => ({
           ...g,
-          // Mantener URLs pero no base64 de videos
           videoUrl: g.videoUrl && !g.videoUrl.startsWith('data:') ? g.videoUrl : '',
         })),
         cart: state.cart,
@@ -467,7 +462,6 @@ export const useStore = create<AppState>()(
         })),
         storeSettings: {
           ...state.storeSettings,
-          // No persistir QR en base64
           binanceQRUrl: state.storeSettings.binanceQRUrl && !state.storeSettings.binanceQRUrl.startsWith('data:')
             ? state.storeSettings.binanceQRUrl
             : '',
