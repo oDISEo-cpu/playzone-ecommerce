@@ -57,3 +57,20 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer base {
+  body {
+    @apply bg-white text-[#2D2D2D] dark:bg-[#0B1120] dark:text-[#F1F5F9] transition-colors duration-300;
+  }
+  
+  /* Scrollbar personalizada para modo oscuro */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-[#E8F1FB] dark:bg-[#151E32];
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#0070D1] rounded-full;
+  }
+}

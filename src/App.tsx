@@ -1,48 +1,46 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useTheme } from './hooks/useTheme';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Games from './pages/Games';
 import GameDetail from './pages/GameDetail';
-import CategoryGames from './pages/CategoryGames';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminGames from './pages/admin/AdminGames';
-import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
-  return (
-    <HashRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/games" element={<Games />} />
-          <Route path="/games/category/:slug" element={<CategoryGames />} />
-          <Route path="/games/:id" element={<GameDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+  const { theme } = useTheme(); // ✅ Inicializa el tema
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="games" element={<AdminGames />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="settings" element={<AdminSettings />} />
+  return (
+    <div className={theme}> {/* ✅ Aplica la clase 'dark' o 'light' al contenedor raíz */}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="games" element={<Games />} />
+            <Route path="games/category/:category" element={<Games />} />
+            <Route path="games/:id" element={<GameDetail />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            
+            {/* Rutas de Admin */}
+            <Route path="admin/games" element={<AdminGames />} />
+            <Route path="admin/orders" element={<AdminOrders />} />
+            <Route path="admin/users" element={<AdminUsers />} />
+            <Route path="admin/settings" element={<AdminSettings />} />
           </Route>
-        </Route>
-      </Routes>
-    </HashRouter>
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 }
 

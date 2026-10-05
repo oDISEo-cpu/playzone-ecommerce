@@ -18,25 +18,22 @@ const categories = [
 export default function Home() {
   const { games, loadGames } = useStore();
 
-  // Cargar juegos desde Supabase al montar el componente
   useEffect(() => {
     loadGames();
   }, [loadGames]);
 
-  // Ofertas Especiales: isFeatured = true Y discount > 0
   const featuredGames = games
     .filter(g => g.isFeatured && g.discount > 0)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
 
-  // Nuevos Lanzamientos: isNewRelease = true
   const newReleaseGames = games
     .filter(g => g.isNewRelease)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
 
   return (
-    <div>
+    <div className="min-h-screen bg-white dark:bg-[#0B1120] transition-colors duration-300">
       {/* Hero Carousel */}
       <section className="py-6">
         <HeroCarousel />
@@ -44,7 +41,7 @@ export default function Home() {
 
       {/* Categorías */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-2xl font-bold text-[#2D2D2D] mb-6">Explorar Categorías</h2>
+        <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] mb-6 transition-colors">Explorar Categorías</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {categories.map((cat, idx) => (
             <motion.div
@@ -55,12 +52,12 @@ export default function Home() {
             >
               <Link
                 to={`/games/category/${cat.name}`}
-                className="flex flex-col items-center gap-3 p-4 bg-white rounded-xl border border-[#E5E5E5] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-[#151E32] border border-[#E5E5E5] dark:border-[#1E293B] rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
                 <div className={`w-12 h-12 ${cat.color} rounded-full flex items-center justify-center`}>
                   <cat.icon className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-sm font-medium text-[#2D2D2D]">{cat.name}</span>
+                <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">{cat.name}</span>
               </Link>
             </motion.div>
           ))}
@@ -73,7 +70,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <Flame className="w-6 h-6 text-red-500" />
-              <h2 className="text-2xl font-bold text-[#2D2D2D]">Ofertas Especiales</h2>
+              <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">Ofertas Especiales</h2>
             </div>
             <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
               Ver todos
@@ -93,7 +90,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-bold text-[#2D2D2D]">Nuevos Lanzamientos</h2>
+              <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">Nuevos Lanzamientos</h2>
             </div>
             <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
               Ver todos
@@ -108,7 +105,7 @@ export default function Home() {
       )}
 
       {/* Banner */}
-      <section className="bg-[#003791] py-16">
+      <section className="bg-[#003791] dark:bg-[#002255] py-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             ¿Listo para tu próxima aventura?
@@ -119,7 +116,7 @@ export default function Home() {
           </p>
           <Link
             to="/games"
-            className="inline-block px-8 py-4 bg-white text-[#003791] font-bold rounded-full hover:bg-[#E8F1FB] transition-colors"
+            className="inline-block px-8 py-4 bg-white text-[#003791] dark:bg-[#0070D1] dark:text-white font-bold rounded-full hover:bg-[#E8F1FB] dark:hover:bg-[#005BB5] transition-colors"
           >
             Explorar Catálogo
           </Link>

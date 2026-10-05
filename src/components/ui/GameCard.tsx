@@ -1,94 +1,87 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Game } from '../../types';
 import { useStore } from '../../store';
 
 interface GameCardProps {
   game: Game;
-  index?: number;
+  index: number;
 }
 
-export default function GameCard({ game, index = 0 }: GameCardProps) {
+export default function GameCard({ game, index }: GameCardProps) {
   const { addToCart } = useStore();
 
-  const discountedPrice = game.discount > 0
-    ? game.price * (1 - game.discount / 100)
+  const discountedPrice = game.discount > 0 
+    ? game.price * (1 - game.discount / 100) 
     : game.price;
 
-  const isOutOfStock = game.stock === 0;
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="group bg-white rounded-xl border border-[#E5E5E5] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+    <div 
+      className="group bg-white dark:bg-[#151E32] border border-[#E5E5E5] dark:border-[#1E293B] rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      style={{ animationDelay: `${index * 50}ms` }}
     >
-      {/* Image */}
-      <Link to={`/games/${game.id}`} className="relative overflow-hidden aspect-[3/2]">
-        <img
-          src={game.imageUrl}
-          alt={game.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+      <Link to={`/games/${game.id}`} className="block relative aspect-[3/4] overflow-hidden">
+        <img 
+          src={game.imageUrl} 
+          alt={game.title} 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {game.discount > 0 && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-            -{game.discount}%
-          </span>
-        )}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">SIN STOCK</span>
-          </div>
-        )}
-        <div className="absolute top-3 right-3 flex flex-col gap-1">
-          <span className="bg-[#003791] text-white text-xs font-medium px-2 py-1 rounded-md">
-            {game.platform}
-          </span>
-          {game.isFeatured && (
-            <span className="flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-              <Star className="w-3 h-3" /> Oferta
+        
+        {/* Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {game.discount > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+              -{game.discount}%
             </span>
           )}
-          {game.isNewRelease && (
-            <span className="flex items-center gap-1 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-              <Sparkles className="w-3 h-3" /> Nuevo
+          {game.isPreOrder && (
+            <span className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+              Pre-Venta
             </span>
           )}
         </div>
+
+        {game.isNewRelease && (
+          <span className="absolute top-2 right-2 bg-yellow-400 text-[#2D2D2D] text-xs font-bold px-2 py-1 rounded-md">
+            NUEVO
+          </span>
+        )}
       </Link>
 
-      {/* Content */}
       <div className="p-4">
-        <span className="text-xs text-[#0070D1] font-medium uppercase tracking-wide">{game.category}</span>
         <Link to={`/games/${game.id}`}>
-          <h3 className="font-bold text-[#2D2D2D] mt-1 group-hover:text-[#0070D1] transition-colors line-clamp-1">
+          <h3 className="font-bold text-[#2D2D2D] dark:text-[#F1F5F9] text-sm mb-1 line-clamp-1 group-hover:text-[#0070D1] transition-colors">
             {game.title}
           </h3>
         </Link>
-        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{game.description}</p>
+        
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{game.platform}</p>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
             {game.discount > 0 && (
-              <span className="text-sm text-gray-400 line-through">${game.price.toFixed(2)}</span>
+              <span className="text-xs text-gray-400 line-through">
+                ${game.price.toFixed(2)}
+              </span>
             )}
-            <span className="text-lg font-bold text-[#2D2D2D]">${discountedPrice.toFixed(2)}</span>
+            <span className="text-lg font-bold text-[#003791] dark:text-[#0070D1]">
+              ${discountedPrice.toFixed(2)}
+            </span>
           </div>
+
           <button
-            onClick={() => !isOutOfStock && addToCart(game)}
-            disabled={isOutOfStock}
-            className={`p-2 rounded-full transition-colors ${
-              isOutOfStock
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#003791] text-white hover:bg-[#0070D1]'
-            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              addToCart(game);
+            }}
+            disabled={game.stock === 0}
+            className="p-2 bg-[#003791] dark:bg-[#0070D1] text-white rounded-lg hover:bg-[#0070D1] dark:hover:bg-[#005BB5] disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
