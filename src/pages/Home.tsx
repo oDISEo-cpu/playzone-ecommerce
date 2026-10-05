@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Flame, Sparkles, Swords, Gamepad2, Trophy, Compass, Skull, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Gamepad2, Swords, Trophy, Compass, Skull, Palette, Flame, Sparkles } from 'lucide-react';
 import HeroCarousel from '../components/ui/HeroCarousel';
 import GameCard from '../components/ui/GameCard';
 import { useStore } from '../store';
@@ -15,7 +16,12 @@ const categories = [
 ];
 
 export default function Home() {
-  const { games } = useStore();
+  const { games, loadGames } = useStore();
+
+  // Cargar juegos desde Supabase al montar el componente
+  useEffect(() => {
+    loadGames();
+  }, [loadGames]);
 
   // Ofertas Especiales: isFeatured = true Y discount > 0
   const featuredGames = games
@@ -36,7 +42,7 @@ export default function Home() {
         <HeroCarousel />
       </section>
 
-      {/* Categories */}
+      {/* Categorías */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h2 className="text-2xl font-bold text-[#2D2D2D] mb-6">Explorar Categorías</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
@@ -108,7 +114,7 @@ export default function Home() {
             ¿Listo para tu próxima aventura?
           </h2>
           <p className="text-blue-200 text-lg mb-8 max-w-2xl mx-auto">
-            Descubre los mejores juegos de PlayStation con precios increíbles. 
+            Descubre los mejores juegos de PlayStation con precios increíbles.
             Entrega digital instantánea.
           </p>
           <Link

@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Game, Order, CartItem, StoreSettings } from '../types';
-import { seedGames } from '../data/games';
 import { uploadImage, uploadVideo, isSupabaseConfigured } from '../lib/supabase';
+import { fetchGames, addGameToDB, updateGameInDB, deleteGameFromDB } from '../lib/supabase-db';
 
 // Helper para comprimir imágenes
 const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<string> => {
@@ -100,9 +100,11 @@ interface AppState {
 
   // Games
   games: Game[];
+  isLoadingGames: boolean;
+  loadGames: () => Promise<void>;
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Promise<void>;
   updateGame: (id: string, game: Partial<Game>) => Promise<void>;
-  deleteGame: (id: string) => void;
+  deleteGame: (id: string) => Promise<void>;
   uploadGameImage: (file: File) => Promise<string>;
   uploadGameVideo: (file: File) => Promise<string>;
 
@@ -184,7 +186,14 @@ export const useStore = create<AppState>()(
       logout: () => set({ currentUser: null }),
 
       // Games State
-      games: seedGames,
+      games: [],
+      isLoadingGames: false,
+
+      loadGames: async () => {
+        set({ isLoadingGames: true });
+        const games = await fetchGames();
+        set({ games, isLoadingGames: false });
+      },
 
       addGame: async (game) => {
         let imageUrl = game.imageUrl;
@@ -198,18 +207,18 @@ export const useStore = create<AppState>()(
           get().addToast('Los videos locales no se guardan. Usa URLs externas de YouTube/Vimeo', 'info');
         }
 
-        const newGame: Game = {
+        const newGame = await addGameToDB({
           ...game,
           imageUrl,
           videoUrl,
-          isPreOrder: game.isPreOrder || false,
-          releaseDate: game.releaseDate || '',
-          id: uuidv4(),
-          createdAt: new Date().toISOString(),
-        };
-        
-        set(state => ({ games: [...state.games, newGame] }));
-        get().addToast('Juego agregado exitosamente', 'success');
+        });
+
+        if (newGame) {
+          set(state => ({ games: [...state.games, newGame] }));
+          get().addToast('Juego agregado exitosamente', 'success');
+        } else {
+          get().addToast('Error al agregar el juego', 'error');
+        }
       },
 
       updateGame: async (id, updates) => {
@@ -226,20 +235,27 @@ export const useStore = create<AppState>()(
           get().addToast('Los videos locales no se guardan. Usa URLs externas de YouTube/Vimeo', 'info');
         }
 
-        set(state => ({
-          games: state.games.map(g => g.id === id ? { 
-            ...g, 
-            ...updates,
-            isPreOrder: updates.isPreOrder !== undefined ? updates.isPreOrder : g.isPreOrder,
-            releaseDate: updates.releaseDate !== undefined ? updates.releaseDate : g.releaseDate,
-          } : g),
-        }));
-        get().addToast('Juego actualizado exitosamente', 'success');
+        const updatedGame = await updateGameInDB(id, updates);
+
+        if (updatedGame) {
+          set(state => ({
+            games: state.games.map(g => g.id === id ? updatedGame : g),
+          }));
+          get().addToast('Juego actualizado exitosamente', 'success');
+        } else {
+          get().addToast('Error al actualizar el juego', 'error');
+        }
       },
 
-      deleteGame: (id) => {
-        set(state => ({ games: state.games.filter(g => g.id !== id) }));
-        get().addToast('Juego eliminado', 'info');
+      deleteGame: async (id) => {
+        const success = await deleteGameFromDB(id);
+        
+        if (success) {
+          set(state => ({ games: state.games.filter(g => g.id !== id) }));
+          get().addToast('Juego eliminado', 'info');
+        } else {
+          get().addToast('Error al eliminar el juego', 'error');
+        }
       },
 
       uploadGameImage: async (file: File): Promise<string> => {
@@ -359,13 +375,6 @@ export const useStore = create<AppState>()(
 
         set(state => ({
           orders: [...state.orders, order],
-          games: state.games.map(g => {
-            const cartItem = cart.find(c => c.game.id === g.id);
-            if (cartItem) {
-              return { ...g, stock: Math.max(0, g.stock - cartItem.quantity) };
-            }
-            return g;
-          }),
           cart: [],
         }));
 
@@ -445,27 +454,9 @@ export const useStore = create<AppState>()(
       partialize: (state) => ({
         currentUser: state.currentUser,
         users: state.users,
-        games: state.games.map(g => ({
-          ...g,
-          videoUrl: g.videoUrl && !g.videoUrl.startsWith('data:') ? g.videoUrl : '',
-        })),
         cart: state.cart,
-        orders: state.orders.map(o => ({
-          ...o,
-          items: o.items.map(item => ({
-            ...item,
-            game: {
-              ...item.game,
-              videoUrl: item.game.videoUrl && !item.game.videoUrl.startsWith('data:') ? item.game.videoUrl : '',
-            },
-          })),
-        })),
-        storeSettings: {
-          ...state.storeSettings,
-          binanceQRUrl: state.storeSettings.binanceQRUrl && !state.storeSettings.binanceQRUrl.startsWith('data:')
-            ? state.storeSettings.binanceQRUrl
-            : '',
-        },
+        orders: state.orders,
+        storeSettings: state.storeSettings,
       }),
     }
   )
