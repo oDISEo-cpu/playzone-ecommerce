@@ -23,7 +23,7 @@ export default function AdminGames() {
     stock: 0,
     isFeatured: false,
     isNewRelease: false,
-    isHeroBanner: false,  // ✅ AGREGAR
+    isHeroBanner: false,
     isPreOrder: false,
     releaseDate: '',
     videoUrl: '',
@@ -44,7 +44,7 @@ export default function AdminGames() {
       stock: 0,
       isFeatured: false,
       isNewRelease: false,
-      isHeroBanner: false,  // ✅ AGREGAR
+      isHeroBanner: false,
       isPreOrder: false,
       releaseDate: '',
       videoUrl: '',
@@ -66,7 +66,7 @@ export default function AdminGames() {
       stock: game.stock,
       isFeatured: game.isFeatured,
       isNewRelease: game.isNewRelease,
-      isHeroBanner: game.isHeroBanner || false,  // ✅ AGREGAR
+      isHeroBanner: game.isHeroBanner || false,
       isPreOrder: game.isPreOrder || false,
       releaseDate: game.releaseDate || '',
       videoUrl: game.videoUrl || '',
@@ -77,12 +77,10 @@ export default function AdminGames() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.imageUrl) {
       useStore.getState().addToast('Por favor sube una imagen del juego', 'error');
       return;
     }
-    
     if (editingGame) {
       await updateGame(editingGame.id, formData);
     } else {
@@ -111,7 +109,6 @@ export default function AdminGames() {
         useStore.getState().addToast('La imagen no debe superar los 5MB', 'error');
         return;
       }
-      
       setUploadingImage(true);
       try {
         const url = await useStore.getState().uploadGameImage(file);
@@ -137,7 +134,6 @@ export default function AdminGames() {
         useStore.getState().addToast('El video no debe superar los 100MB', 'error');
         return;
       }
-      
       setUploadingVideo(true);
       try {
         const url = await useStore.getState().uploadGameVideo(file);
@@ -159,14 +155,13 @@ export default function AdminGames() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-xl font-bold text-[#2D2D2D]">Gestión de Juegos ({games.length})</h2>
+        <h2 className="text-xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9]">Gestión de Juegos ({games.length})</h2>
         <div className="flex items-center gap-3">
-          {/* Filtros */}
-          <div className="flex bg-[#E8F1FB] rounded-lg p-1">
+          <div className="flex bg-[#E8F1FB] dark:bg-[#1E293B] rounded-lg p-1 transition-colors">
             <button
               onClick={() => setFilterType('all')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                filterType === 'all' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+                filterType === 'all' ? 'bg-white dark:bg-[#151E32] text-[#003791] dark:text-[#0070D1] shadow-sm' : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               Todos
@@ -174,7 +169,7 @@ export default function AdminGames() {
             <button
               onClick={() => setFilterType('featured')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
-                filterType === 'featured' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+                filterType === 'featured' ? 'bg-white dark:bg-[#151E32] text-[#003791] dark:text-[#0070D1] shadow-sm' : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               <Star className="w-3 h-3" /> Ofertas
@@ -182,7 +177,7 @@ export default function AdminGames() {
             <button
               onClick={() => setFilterType('new')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
-                filterType === 'new' ? 'bg-white text-[#003791] shadow-sm' : 'text-gray-600'
+                filterType === 'new' ? 'bg-white dark:bg-[#151E32] text-[#003791] dark:text-[#0070D1] shadow-sm' : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               <Sparkles className="w-3 h-3" /> Nuevos
@@ -190,7 +185,7 @@ export default function AdminGames() {
           </div>
           <button
             onClick={openCreateForm}
-            className="flex items-center gap-2 px-4 py-2 bg-[#003791] text-white rounded-lg text-sm font-medium hover:bg-[#0070D1] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#003791] dark:bg-[#0070D1] text-white rounded-lg text-sm font-medium hover:bg-[#0070D1] dark:hover:bg-[#005BB5] transition-colors"
           >
             <Plus className="w-4 h-4" />
             Agregar
@@ -199,59 +194,59 @@ export default function AdminGames() {
       </div>
 
       {/* Games Table */}
-      <div className="bg-white rounded-xl border border-[#E5E5E5] overflow-hidden">
+      <div className="bg-white dark:bg-[#151E32] rounded-xl border border-[#E5E5E5] dark:border-[#1E293B] overflow-hidden transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#E8F1FB]">
+            <thead className="bg-[#E8F1FB] dark:bg-[#1E293B] transition-colors">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Juego</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Categoría</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Precio</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Stock</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Estado</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] uppercase">Acciones</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Juego</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Categoría</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Precio</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Stock</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Estado</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-[#003791] dark:text-[#0070D1] uppercase">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E5E5E5]">
+            <tbody className="divide-y divide-[#E5E5E5] dark:divide-[#1E293B]">
               {filteredGames.map(game => (
-                <tr key={game.id} className="hover:bg-gray-50">
+                <tr key={game.id} className="hover:bg-gray-50 dark:hover:bg-[#1E293B]/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img src={game.imageUrl} alt={game.title} className="w-10 h-10 rounded-lg object-cover" />
-                      <span className="font-medium text-sm text-[#2D2D2D] truncate max-w-[150px]">{game.title}</span>
+                      <span className="font-medium text-sm text-[#2D2D2D] dark:text-[#F1F5F9] truncate max-w-[150px]">{game.title}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{game.category}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{game.category}</td>
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-[#2D2D2D]">${game.price.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9]">${game.price.toFixed(2)}</span>
                     {game.discount > 0 && (
-                      <span className="text-xs text-red-500 ml-1">-{game.discount}%</span>
+                      <span className="text-xs text-red-500 dark:text-red-400 ml-1">-{game.discount}%</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-sm font-medium ${game.stock === 0 ? 'text-red-500' : game.stock < 10 ? 'text-yellow-500' : 'text-green-500'}`}>
+                    <span className={`text-sm font-medium ${game.stock === 0 ? 'text-red-500 dark:text-red-400' : game.stock < 10 ? 'text-yellow-500 dark:text-yellow-400' : 'text-green-500 dark:text-green-400'}`}>
                       {game.stock}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       {game.isFeatured && (
-                        <span className="flex items-center gap-1 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full">
                           <Star className="w-3 h-3" /> Oferta
                         </span>
                       )}
                       {game.isNewRelease && (
-                        <span className="flex items-center gap-1 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full">
                           <Sparkles className="w-3 h-3" /> Nuevo
                         </span>
                       )}
                       {game.videoUrl && (
-                        <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                        <span className="flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full">
                           <Video className="w-3 h-3" /> Video
                         </span>
                       )}
                       {!game.isFeatured && !game.isNewRelease && !game.videoUrl && (
-                        <span className="text-xs text-gray-400">-</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </div>
                   </td>
@@ -259,13 +254,13 @@ export default function AdminGames() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditForm(game)}
-                        className="p-1.5 text-gray-400 hover:text-[#0070D1] hover:bg-[#E8F1FB] rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-[#0070D1] hover:bg-[#E8F1FB] dark:hover:bg-[#1E293B] rounded-lg transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(game.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -292,44 +287,44 @@ export default function AdminGames() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-[#151E32] rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-[#E5E5E5] dark:border-[#1E293B] transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-[#2D2D2D]">
+                <h3 className="text-lg font-bold text-[#2D2D2D] dark:text-[#F1F5F9]">
                   {editingGame ? 'Editar Juego' : 'Nuevo Juego'}
                 </h3>
-                <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => setShowForm(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Título</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Título</label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                    className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Descripción</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Descripción</label>
                   <textarea
                     required
                     rows={3}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] resize-none"
+                    className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] resize-none transition-colors"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Precio ($)</label>
+                    <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Precio ($)</label>
                     <input
                       type="number"
                       required
@@ -337,29 +332,29 @@ export default function AdminGames() {
                       step="0.01"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Descuento (%)</label>
+                    <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Descuento (%)</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
                       value={formData.discount}
                       onChange={(e) => setFormData({ ...formData, discount: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Categoría</label>
+                    <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Categoría</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                     >
                       {categories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
@@ -367,11 +362,11 @@ export default function AdminGames() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Plataforma</label>
+                    <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Plataforma</label>
                     <select
                       value={formData.platform}
                       onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                     >
                       {platforms.map(plat => (
                         <option key={plat} value={plat}>{plat}</option>
@@ -381,29 +376,29 @@ export default function AdminGames() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Stock</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Stock</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                    className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
                   />
                 </div>
 
-                {/* Toggles para Featured y New Release */}
-                <div className="space-y-3 p-4 bg-[#E8F1FB] rounded-lg">
+                {/* Toggles */}
+                <div className="space-y-3 p-4 bg-[#E8F1FB] dark:bg-[#1E293B] rounded-lg transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Star className="w-4 h-4 text-red-500" />
-                      <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Ofertas Especiales</span>
+                      <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9]">Mostrar en Ofertas Especiales</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        formData.isFeatured ? 'bg-red-500' : 'bg-gray-300'
+                        formData.isFeatured ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                     >
                       <span
@@ -416,13 +411,13 @@ export default function AdminGames() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-yellow-500" />
-                      <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Nuevos Lanzamientos</span>
+                      <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9]">Mostrar en Nuevos Lanzamientos</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, isNewRelease: !formData.isNewRelease })}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        formData.isNewRelease ? 'bg-yellow-500' : 'bg-gray-300'
+                        formData.isNewRelease ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                     >
                       <span
@@ -435,16 +430,16 @@ export default function AdminGames() {
                 </div>
 
                 {/* Toggle para Banner Principal */}
-                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] dark:bg-[#1E293B] rounded-lg transition-colors">
                   <div className="flex items-center gap-2">
                     <Monitor className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-medium text-[#2D2D2D]">Mostrar en Banner Principal</span>
+                    <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9]">Mostrar en Banner Principal</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, isHeroBanner: !formData.isHeroBanner })}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
-                      formData.isHeroBanner ? 'bg-blue-500' : 'bg-gray-300'
+                      formData.isHeroBanner ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                   >
                     <span
@@ -455,17 +450,17 @@ export default function AdminGames() {
                   </button>
                 </div>
 
-                                {/* Toggle para Pre-Venta */}
-                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] rounded-lg">
+                {/* Toggle para Pre-Venta */}
+                <div className="flex items-center justify-between p-4 bg-[#E8F1FB] dark:bg-[#1E293B] rounded-lg transition-colors">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-medium text-[#2D2D2D]">Disponible en Pre-Venta</span>
+                    <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9]">Disponible en Pre-Venta</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, isPreOrder: !formData.isPreOrder })}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
-                      formData.isPreOrder ? 'bg-purple-500' : 'bg-gray-300'
+                      formData.isPreOrder ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'
                     }`}
                   >
                     <span
@@ -476,27 +471,27 @@ export default function AdminGames() {
                   </button>
                 </div>
 
-                {/* Fecha de Lanzamiento (solo si es Pre-Venta) */}
+                {/* Fecha de Lanzamiento */}
                 {formData.isPreOrder && (
                   <div>
-                    <label className="block text-sm font-medium text-[#2D2D2D] mb-1">
+                    <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">
                       Fecha de Lanzamiento
                     </label>
                     <input
                       type="date"
                       value={formData.releaseDate}
                       onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                     />
                   </div>
                 )}
 
                 {/* Imagen del Juego */}
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Imagen del Juego</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Imagen del Juego</label>
                   {formData.imageUrl && (
                     <div className="mb-3 relative">
-                      <img src={formData.imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-lg border border-[#E5E5E5]" />
+                      <img src={formData.imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-lg border border-[#E5E5E5] dark:border-[#1E293B]" />
                       <button
                         type="button"
                         onClick={() => {
@@ -511,25 +506,24 @@ export default function AdminGames() {
                   )}
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-4 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
+                    className="border-2 border-dashed border-[#E5E5E5] dark:border-[#1E293B] rounded-lg p-4 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 dark:hover:bg-[#1E293B]/50 transition-all"
                   >
-                    <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600">{formData.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}</p>
+                    <Upload className="w-6 h-6 text-gray-400 dark:text-gray-500 mx-auto mb-1" />
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{formData.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}</p>
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </div>
 
                 {/* Video del Juego */}
                 <div>
-                  <label className="block text-sm font-medium text-[#2D2D2D] mb-1">Video (opcional)</label>
+                  <label className="block text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] mb-1">Video (opcional)</label>
                   
-                  {/* Tipo de video */}
                   <div className="flex gap-2 mb-3">
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, videoType: 'file', videoUrl: '' })}
                       className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
-                        formData.videoType === 'file' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                        formData.videoType === 'file' ? 'border-[#0070D1] bg-[#E8F1FB] dark:bg-[#1E293B] text-[#003791] dark:text-[#0070D1]' : 'border-[#E5E5E5] dark:border-[#1E293B] text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       <Video className="w-3 h-3 inline mr-1" /> Archivo
@@ -538,7 +532,7 @@ export default function AdminGames() {
                       type="button"
                       onClick={() => setFormData({ ...formData, videoType: 'youtube', videoUrl: '' })}
                       className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
-                        formData.videoType === 'youtube' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                        formData.videoType === 'youtube' ? 'border-[#0070D1] bg-[#E8F1FB] dark:bg-[#1E293B] text-[#003791] dark:text-[#0070D1]' : 'border-[#E5E5E5] dark:border-[#1E293B] text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       YouTube
@@ -547,17 +541,16 @@ export default function AdminGames() {
                       type="button"
                       onClick={() => setFormData({ ...formData, videoType: 'vimeo', videoUrl: '' })}
                       className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
-                        formData.videoType === 'vimeo' ? 'border-[#0070D1] bg-[#E8F1FB] text-[#003791]' : 'border-[#E5E5E5] text-gray-600'
+                        formData.videoType === 'vimeo' ? 'border-[#0070D1] bg-[#E8F1FB] dark:bg-[#1E293B] text-[#003791] dark:text-[#0070D1]' : 'border-[#E5E5E5] dark:border-[#1E293B] text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       Vimeo
                     </button>
                   </div>
 
-                  {/* Preview de video */}
                   {formData.videoUrl && formData.videoType === 'file' && (
                     <div className="mb-3 relative">
-                      <video src={formData.videoUrl} className="w-full h-32 object-cover rounded-lg border border-[#E5E5E5]" controls />
+                      <video src={formData.videoUrl} className="w-full h-32 object-cover rounded-lg border border-[#E5E5E5] dark:border-[#1E293B]" controls />
                       <button
                         type="button"
                         onClick={() => {
@@ -572,7 +565,7 @@ export default function AdminGames() {
                   )}
 
                   {formData.videoUrl && (formData.videoType === 'youtube' || formData.videoType === 'vimeo') && (
-                    <div className="mb-3 p-2 bg-gray-100 rounded-lg text-xs text-gray-600 break-all flex items-center justify-between gap-2">
+                    <div className="mb-3 p-2 bg-gray-100 dark:bg-[#1E293B] rounded-lg text-xs text-gray-600 dark:text-gray-400 break-all flex items-center justify-between gap-2 transition-colors">
                       <span className="truncate">URL: {formData.videoUrl}</span>
                       <button
                         type="button"
@@ -588,18 +581,18 @@ export default function AdminGames() {
                     <div>
                       <div
                         onClick={() => videoInputRef.current?.click()}
-                        className="border-2 border-dashed border-[#E5E5E5] rounded-lg p-3 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 transition-all"
+                        className="border-2 border-dashed border-[#E5E5E5] dark:border-[#1E293B] rounded-lg p-3 text-center cursor-pointer hover:border-[#0070D1] hover:bg-[#E8F1FB]/30 dark:hover:bg-[#1E293B]/50 transition-all"
                       >
                         {uploadingVideo ? (
                           <div className="flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-[#0070D1] border-t-transparent rounded-full animate-spin" />
-                            <p className="text-xs text-gray-600">Subiendo video...</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Subiendo video...</p>
                           </div>
                         ) : (
                           <>
-                            <Video className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                            <p className="text-xs text-gray-600">Subir video (MP4, máx 100MB)</p>
-                            <p className="text-xs text-gray-400 mt-1">Requiere Supabase configurado</p>
+                            <Video className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-auto mb-1" />
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Subir video (MP4, máx 100MB)</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Requiere Supabase configurado</p>
                           </>
                         )}
                       </div>
@@ -611,16 +604,16 @@ export default function AdminGames() {
                       value={formData.videoUrl}
                       onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                       placeholder={`URL de ${formData.videoType === 'youtube' ? 'YouTube' : 'Vimeo'}...`}
-                      className="w-full px-4 py-2 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0B1120] border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                     />
                   )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-[#E5E5E5] text-[#2D2D2D] font-medium rounded-lg hover:bg-gray-50">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-[#E5E5E5] dark:border-[#1E293B] text-[#2D2D2D] dark:text-[#F1F5F9] font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-[#1E293B] transition-colors">
                     Cancelar
                   </button>
-                  <button type="submit" className="flex-1 py-2.5 bg-[#003791] text-white font-medium rounded-lg hover:bg-[#0070D1]">
+                  <button type="submit" className="flex-1 py-2.5 bg-[#003791] dark:bg-[#0070D1] text-white font-medium rounded-lg hover:bg-[#0070D1] dark:hover:bg-[#005BB5] transition-colors">
                     {editingGame ? 'Guardar' : 'Crear'}
                   </button>
                 </div>
