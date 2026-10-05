@@ -15,10 +15,10 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
-  const { theme } = useTheme(); // ✅ Inicializa el tema
+  const { theme } = useTheme();
 
   return (
-    <div className={theme}> {/* ✅ Aplica la clase 'dark' o 'light' al contenedor raíz */}
+    <div className={theme || 'light'}> {/* ✅ Agregamos fallback a 'light' */}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -32,7 +32,7 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="dashboard" element={<Dashboard />} />
             
-            {/* Rutas de Admin */}
+            {/* Rutas de Admin - SIN layout wrapper */}
             <Route path="admin/games" element={<AdminGames />} />
             <Route path="admin/orders" element={<AdminOrders />} />
             <Route path="admin/users" element={<AdminUsers />} />
