@@ -10,10 +10,11 @@ export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Antes estaba: .filter(g => g.isFeatured)
   const featuredGames = games
-  .filter(g => g.isFeatured) // Solo muestra los que tú marques como destacados
-  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  .slice(0, 5);
+    .filter(g => g.isHeroBanner && g.videoUrl) // ✅ Ahora usa isHeroBanner y verifica que tenga video
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);

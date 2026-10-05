@@ -21,11 +21,11 @@ export interface Game {
   stock: number;
   isFeatured: boolean;
   isNewRelease: boolean;
-  isHeroBanner: boolean;  // ✅ AGREGAR
+  isHeroBanner: boolean;       // ✅ AGREGADO
+  isPreOrder: boolean;         // ✅ AGREGADO
+  releaseDate?: string;        // ✅ AGREGADO
   videoUrl?: string;
   videoType?: 'file' | 'youtube' | 'vimeo';
-  isPreOrder: boolean;
-  releaseDate?: string;
   createdAt: string;
 }
 
