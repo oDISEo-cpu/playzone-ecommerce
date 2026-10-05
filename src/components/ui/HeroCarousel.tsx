@@ -50,8 +50,8 @@ export default function HeroCarousel() {
   };
 
   const renderBackground = (game: Game) => {
-    // En mobile, siempre usar imagen para ahorrar datos
-    if (isMobile || !game.videoUrl) {
+    // Si no hay video, usar imagen
+    if (!game.videoUrl) {
       return (
         <img
           src={game.imageUrl}
