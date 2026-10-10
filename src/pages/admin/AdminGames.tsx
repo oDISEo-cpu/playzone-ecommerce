@@ -35,6 +35,7 @@ export default function AdminGames() {
   const [rawgApiKey, setRawgApiKey] = useState('');
   const [processingImages, setProcessingImages] = useState(false);
   const [imageUpdateResult, setImageUpdateResult] = useState('');
+  const [progress, setProgress] = useState(0);
 
   const openCreateForm = () => {
     setEditingGame(null);
@@ -155,7 +156,7 @@ export default function AdminGames() {
     }
   };
 
-  // ✅ Función del Bot de Imágenes
+  // ✅ Función del Bot de Imágenes (Automatizada por lotes)
   const handleAutoUpdateImages = async () => {
     if (!rawgApiKey) {
       useStore.getState().addToast('Ingresa tu API Key de RAWG', 'error');
@@ -163,34 +164,69 @@ export default function AdminGames() {
     }
 
     setProcessingImages(true);
-    setImageUpdateResult('⏳ El bot está trabajando... Esto puede tardar 2-3 minutos. No cierres la pestaña.');
+    setProgress(0);
+    setImageUpdateResult('⏳ Preparando el proceso...');
 
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const response = await fetch('/.netlify/functions/auto-update-images', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          rawgKey: rawgApiKey,
-          supabaseUrl,
-          supabaseKey
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setImageUpdateResult(result.message);
-        useStore.getState().addToast('¡Portadas actualizadas!', 'success');
-        await useStore.getState().loadGames();
-      } else {
-        setImageUpdateResult(`❌ Error: ${result.error || 'Desconocido'}`);
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Variables de entorno de Supabase no configuradas');
       }
-    } catch (error) {
+
+      // 1. Obtener total de juegos para calcular lotes
+      const res = await fetch(`${supabaseUrl}/rest/v1/games?select=id,title`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      });
+      const allGames = await res.json();
+      
+      const chunkSize = 30;
+      const totalChunks = Math.ceil(allGames.length / chunkSize);
+      let totalUpdated = 0;
+      let totalNotFound = 0;
+      let totalErrors = 0;
+
+      // 2. Procesar lote por lote automáticamente
+      for (let i = 0; i < totalChunks; i++) {
+        setImageUpdateResult(`⏳ Procesando lote ${i + 1} de ${totalChunks}...`);
+        setProgress(Math.round(((i) / totalChunks) * 100));
+
+        const response = await fetch('/.netlify/functions/auto-update-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            rawgKey: rawgApiKey,
+            supabaseUrl,
+            supabaseKey,
+            chunkIndex: i,
+            chunkSize
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          totalUpdated += result.stats?.updated || 0;
+          totalNotFound += result.stats?.notFound || 0;
+          totalErrors += result.stats?.errors || 0;
+          
+          if (result.finished) {
+            setProgress(100);
+            setImageUpdateResult(`✅ ¡Proceso finalizado! ${totalUpdated} actualizadas, ${totalNotFound} no encontradas, ${totalErrors} errores.`);
+            useStore.getState().addToast('¡Todas las portadas han sido procesadas!', 'success');
+            await useStore.getState().loadGames();
+            break;
+          }
+        } else {
+          throw new Error(result.error || 'Error en el lote');
+        }
+      }
+
+    } catch (error: any) {
       console.error('Error:', error);
-      setImageUpdateResult('❌ Error de conexión con el servidor.');
+      setImageUpdateResult(`❌ Error: ${error.message}`);
+      useStore.getState().addToast('Error durante la actualización', 'error');
     } finally {
       setProcessingImages(false);
     }
@@ -323,7 +359,7 @@ export default function AdminGames() {
         </div>
       </div>
 
-      {/*  BOT DE AUTOMATIZACIÓN DE IMÁGENES */}
+      {/* 🤖 BOT DE AUTOMATIZACIÓN DE IMÁGENES */}
       <div className="mt-10 p-6 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl border border-indigo-400/30">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-white/20 rounded-lg">
@@ -333,7 +369,7 @@ export default function AdminGames() {
           </div>
           <div>
             <h3 className="text-white font-bold text-lg">Automatización de Portadas (RAWG)</h3>
-            <p className="text-indigo-100 text-sm">Actualiza las imágenes de todos los juegos automáticamente.</p>
+            <p className="text-indigo-100 text-sm">Actualiza las imágenes de todos los juegos automáticamente en segundo plano.</p>
           </div>
         </div>
 
@@ -365,6 +401,16 @@ export default function AdminGames() {
             )}
           </button>
         </div>
+
+        {/* Barra de progreso */}
+        {processingImages && (
+          <div className="mt-4 w-full bg-black/20 rounded-full h-2.5 backdrop-blur-sm">
+            <div 
+              className="bg-white h-2.5 rounded-full transition-all duration-500" 
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        )}
 
         {imageUpdateResult && (
           <div className="mt-4 p-3 bg-black/20 rounded-lg text-white text-sm font-medium backdrop-blur-sm border border-white/10">
