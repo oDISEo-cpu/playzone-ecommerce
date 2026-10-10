@@ -18,7 +18,7 @@ exports.handler = async function (event) {
       body: JSON.stringify({
         price_amount: amount,
         price_currency: 'usd',
-        pay_currency: 'usdttrc20', // USDT en red TRON (TRC20)
+        pay_currency: 'usdttrc20',
         order_id: order_id,
         ipn_callback_url: '', 
       }),

@@ -27,7 +27,7 @@ exports.handler = async function (event) {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
-        payment_status: data.payment_status, // 'finished', 'waiting', 'failed', etc.
+        payment_status: data.payment_status,
       }),
     };
   } catch (error) {
