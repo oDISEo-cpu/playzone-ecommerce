@@ -34,14 +34,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0B1120] transition-colors duration-300">
-      {/* Hero Carousel */}
       <section className="py-6">
         <HeroCarousel />
       </section>
 
-      {/* Categorías */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] mb-6 transition-colors">Explorar Categorías</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 transition-colors">Explorar Categorías</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {categories.map((cat, idx) => (
             <motion.div
@@ -52,27 +50,26 @@ export default function Home() {
             >
               <Link
                 to={`/games/category/${cat.name}`}
-                className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-[#151E32] border border-[#E5E5E5] dark:border-[#1E293B] rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-[#151E32] border border-gray-200 dark:border-[#1E293B] rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
                 <div className={`w-12 h-12 ${cat.color} rounded-full flex items-center justify-center`}>
                   <cat.icon className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-sm font-medium text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">{cat.name}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors">{cat.name}</span>
               </Link>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Ofertas Especiales */}
       {featuredGames.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <Flame className="w-6 h-6 text-red-500" />
-              <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">Ofertas Especiales</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors">Ofertas Especiales</h2>
             </div>
-            <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
+            <Link to="/games" className="text-[#0070D1] dark:text-[#60A5FA] text-sm font-medium hover:underline">
               Ver todos
             </Link>
           </div>
@@ -84,15 +81,14 @@ export default function Home() {
         </section>
       )}
 
-      {/* Nuevos Lanzamientos */}
       {newReleaseGames.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-2xl font-bold text-[#2D2D2D] dark:text-[#F1F5F9] transition-colors">Nuevos Lanzamientos</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors">Nuevos Lanzamientos</h2>
             </div>
-            <Link to="/games" className="text-[#0070D1] text-sm font-medium hover:underline">
+            <Link to="/games" className="text-[#0070D1] dark:text-[#60A5FA] text-sm font-medium hover:underline">
               Ver todos
             </Link>
           </div>
@@ -104,7 +100,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Banner */}
       <section className="bg-[#003791] dark:bg-[#002255] py-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">

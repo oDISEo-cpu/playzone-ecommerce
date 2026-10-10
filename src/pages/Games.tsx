@@ -1,229 +1,164 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import GameCard from '../components/ui/GameCard';
 import { useStore } from '../store';
+import GameCard from '../components/ui/GameCard';
 
-const categories = ['Acción', 'RPG', 'Deportes', 'Aventura', 'Terror', 'Indie'];
-const platforms = ['PS4', 'PS5', 'PS4/PS5'];
-const sortOptions = [
-  { label: 'Más recientes', value: 'newest' },
-  { label: 'Precio: Menor a Mayor', value: 'price-asc' },
-  { label: 'Precio: Mayor a Menor', value: 'price-desc' },
-  { label: 'Mayor descuento', value: 'discount' },
-];
+const categories = ['Todos', 'Acción', 'RPG', 'Deportes', 'Aventura', 'Terror', 'Indie', 'Simulación'];
+const platforms = ['Todas', 'PS4', 'PS5', 'PS4/PS5'];
 
 export default function Games() {
   const { games } = useStore();
   const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get('search') || '';
-
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('newest');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const [showFilters, setShowFilters] = useState(false);
+  const initialCategory = searchParams.get('category') || 'Todos';
+  
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedPlatform, setSelectedPlatform] = useState('Todas');
+  const [maxPrice, setMaxPrice] = useState(100);
+  const [sortBy, setSortBy] = useState('recent');
 
   const filteredGames = useMemo(() => {
     let result = [...games];
 
-    // Search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(g =>
-        g.title.toLowerCase().includes(q) ||
-        g.description.toLowerCase().includes(q) ||
-        g.category.toLowerCase().includes(q)
-      );
-    }
-
-    // Category filter
-    if (selectedCategory) {
+    if (selectedCategory !== 'Todos') {
       result = result.filter(g => g.category === selectedCategory);
     }
-
-    // Platform filter
-    if (selectedPlatform) {
-      result = result.filter(g => g.platform === selectedPlatform);
+    if (selectedPlatform !== 'Todas') {
+      result = result.filter(g => g.platform === selectedPlatform || g.platform.includes(selectedPlatform));
     }
+    result = result.filter(g => g.price <= maxPrice);
 
-    // Price filter
-    result = result.filter(g => {
-      const price = g.discount > 0 ? g.price * (1 - g.discount / 100) : g.price;
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
-
-    // Sort
-    switch (sortBy) {
-      case 'newest':
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case 'price-asc':
-        result.sort((a, b) => {
-          const pa = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
-          const pb = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
-          return pa - pb;
-        });
-        break;
-      case 'price-desc':
-        result.sort((a, b) => {
-          const pa = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
-          const pb = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
-          return pb - pa;
-        });
-        break;
-      case 'discount':
-        result.sort((a, b) => b.discount - a.discount);
-        break;
-    }
+    if (sortBy === 'price-asc') result.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-desc') result.sort((a, b) => b.price - a.price);
+    else result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return result;
-  }, [games, searchQuery, selectedCategory, selectedPlatform, sortBy, priceRange]);
-
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSelectedPlatform('');
-    setPriceRange([0, 100]);
-  };
-
-  const hasActiveFilters = selectedCategory || selectedPlatform || priceRange[0] > 0 || priceRange[1] < 100;
+  }, [games, selectedCategory, selectedPlatform, maxPrice, sortBy]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2D2D2D]">
-            {searchQuery ? `Resultados para "${searchQuery}"` : 'Catálogo de Juegos'}
-          </h1>
-          <p className="text-gray-500 mt-1">{filteredGames.length} juegos encontrados</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 bg-white border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1]"
-          >
-            {sortOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2 bg-[#003791] text-white rounded-lg text-sm"
-          >
-            <Filter className="w-4 h-4" />
-            Filtros
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-8">
-        {/* Sidebar Filters */}
-        <aside className={`${showFilters ? 'fixed inset-0 z-50 bg-white p-6 overflow-auto' : 'hidden'} lg:block lg:relative lg:w-64 shrink-0`}>
-          <div className="flex items-center justify-between mb-6 lg:hidden">
-            <h3 className="font-bold text-lg">Filtros</h3>
-            <button onClick={() => setShowFilters(false)}>
-              <X className="w-6 h-6" />
-            </button>
+    <div className="min-h-screen bg-white dark:bg-[#0B1120] transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Catálogo de Juegos</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">{filteredGames.length} juegos encontrados</p>
           </div>
-
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-sm text-[#0070D1] hover:underline mb-4 block"
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600 dark:text-gray-400">Ordenar por:</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-white dark:bg-[#151E32] border border-gray-200 dark:border-[#1E293B] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0070D1] transition-colors"
             >
-              Limpiar filtros
-            </button>
-          )}
-
-          {/* Category */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-[#2D2D2D] mb-3">Categoría</h3>
-            <div className="space-y-2">
-              {categories.map(cat => (
-                <label key={cat} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="category"
-                    checked={selectedCategory === cat}
-                    onChange={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
-                    className="w-4 h-4 text-[#0070D1] focus:ring-[#0070D1]"
-                  />
-                  <span className="text-sm text-[#2D2D2D]">{cat}</span>
-                </label>
-              ))}
-            </div>
+              <option value="recent">Más recientes</option>
+              <option value="price-asc">Precio: Menor a Mayor</option>
+              <option value="price-desc">Precio: Mayor a Menor</option>
+            </select>
           </div>
+        </div>
 
-          {/* Platform */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-[#2D2D2D] mb-3">Plataforma</h3>
-            <div className="space-y-2">
-              {platforms.map(plat => (
-                <label key={plat} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="platform"
-                    checked={selectedPlatform === plat}
-                    onChange={() => setSelectedPlatform(selectedPlatform === plat ? '' : plat)}
-                    className="w-4 h-4 text-[#0070D1] focus:ring-[#0070D1]"
-                  />
-                  <span className="text-sm text-[#2D2D2D]">{plat}</span>
-                </label>
-              ))}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar Filtros */}
+          <aside className="lg:col-span-1 space-y-8">
+            {/* Categoría */}
+            <div className="bg-white dark:bg-[#151E32] rounded-xl border border-gray-200 dark:border-[#1E293B] p-6 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4">Categoría</h3>
+              <div className="space-y-2">
+                {categories.map(cat => (
+                  <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      selectedCategory === cat ? 'border-[#0070D1] dark:border-[#60A5FA]' : 'border-gray-300 dark:border-gray-600'
+                    }`}>
+                      {selectedCategory === cat && <div className="w-2 h-2 rounded-full bg-[#0070D1] dark:bg-[#60A5FA]" />}
+                    </div>
+                    <input
+                      type="radio"
+                      name="category"
+                      value={cat}
+                      checked={selectedCategory === cat}
+                      onChange={() => setSelectedCategory(cat)}
+                      className="hidden"
+                    />
+                    <span className={`text-sm transition-colors ${
+                      selectedCategory === cat ? 'text-[#0070D1] dark:text-[#60A5FA] font-medium' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+                    }`}>
+                      {cat}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
+
+            {/* Plataforma */}
+            <div className="bg-white dark:bg-[#151E32] rounded-xl border border-gray-200 dark:border-[#1E293B] p-6 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4">Plataforma</h3>
+              <div className="space-y-2">
+                {platforms.map(plat => (
+                  <label key={plat} className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      selectedPlatform === plat ? 'border-[#0070D1] dark:border-[#60A5FA]' : 'border-gray-300 dark:border-gray-600'
+                    }`}>
+                      {selectedPlatform === plat && <div className="w-2 h-2 rounded-full bg-[#0070D1] dark:bg-[#60A5FA]" />}
+                    </div>
+                    <input
+                      type="radio"
+                      name="platform"
+                      value={plat}
+                      checked={selectedPlatform === plat}
+                      onChange={() => setSelectedPlatform(plat)}
+                      className="hidden"
+                    />
+                    <span className={`text-sm transition-colors ${
+                      selectedPlatform === plat ? 'text-[#0070D1] dark:text-[#60A5FA] font-medium' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+                    }`}>
+                      {plat}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Precio */}
+            <div className="bg-white dark:bg-[#151E32] rounded-xl border border-gray-200 dark:border-[#1E293B] p-6 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4">Precio</h3>
+              <div className="space-y-4">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#0070D1]"
+                />
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>$0</span>
+                  <span className="font-medium text-[#0070D1] dark:text-[#60A5FA]">${maxPrice}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Grid de Juegos */}
+          <div className="lg:col-span-3">
+            {filteredGames.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-500 dark:text-gray-400 text-lg">No se encontraron juegos con estos filtros.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredGames.map((game, idx) => (
+                  <motion.div
+                    key={game.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <GameCard game={game} index={idx} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* Price Range */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-[#2D2D2D] mb-3">Precio</h3>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([0, Number(e.target.value)])}
-              className="w-full accent-[#0070D1]"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>$0</span>
-              <span>${priceRange[1]}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowFilters(false)}
-            className="lg:hidden w-full py-3 bg-[#003791] text-white rounded-lg font-medium mt-4"
-          >
-            Aplicar Filtros
-          </button>
-        </aside>
-
-        {/* Games Grid */}
-        <div className="flex-1">
-          {filteredGames.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <p className="text-gray-500 text-lg">No se encontraron juegos con estos filtros.</p>
-              <button
-                onClick={clearFilters}
-                className="mt-4 text-[#0070D1] font-medium hover:underline"
-              >
-                Limpiar filtros
-              </button>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredGames.map((game, idx) => (
-                <GameCard key={game.id} game={game} index={idx} />
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
