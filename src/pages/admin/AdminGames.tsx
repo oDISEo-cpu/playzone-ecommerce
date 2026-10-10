@@ -31,6 +31,11 @@ export default function AdminGames() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ✅ Estados para el Bot de Imágenes
+  const [rawgApiKey, setRawgApiKey] = useState('');
+  const [processingImages, setProcessingImages] = useState(false);
+  const [imageUpdateResult, setImageUpdateResult] = useState('');
+
   const openCreateForm = () => {
     setEditingGame(null);
     setFormData({
@@ -77,10 +82,12 @@ export default function AdminGames() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.imageUrl) {
       useStore.getState().addToast('Por favor sube una imagen del juego', 'error');
       return;
     }
+    
     if (editingGame) {
       await updateGame(editingGame.id, formData);
     } else {
@@ -109,6 +116,7 @@ export default function AdminGames() {
         useStore.getState().addToast('La imagen no debe superar los 5MB', 'error');
         return;
       }
+      
       setUploadingImage(true);
       try {
         const url = await useStore.getState().uploadGameImage(file);
@@ -134,6 +142,7 @@ export default function AdminGames() {
         useStore.getState().addToast('El video no debe superar los 100MB', 'error');
         return;
       }
+      
       setUploadingVideo(true);
       try {
         const url = await useStore.getState().uploadGameVideo(file);
@@ -143,6 +152,47 @@ export default function AdminGames() {
       } finally {
         setUploadingVideo(false);
       }
+    }
+  };
+
+  // ✅ Función del Bot de Imágenes
+  const handleAutoUpdateImages = async () => {
+    if (!rawgApiKey) {
+      useStore.getState().addToast('Ingresa tu API Key de RAWG', 'error');
+      return;
+    }
+
+    setProcessingImages(true);
+    setImageUpdateResult('⏳ El bot está trabajando... Esto puede tardar 2-3 minutos. No cierres la pestaña.');
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch('/.netlify/functions/auto-update-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          rawgKey: rawgApiKey,
+          supabaseUrl,
+          supabaseKey
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setImageUpdateResult(result.message);
+        useStore.getState().addToast('¡Portadas actualizadas!', 'success');
+        await useStore.getState().loadGames();
+      } else {
+        setImageUpdateResult(`❌ Error: ${result.error || 'Desconocido'}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setImageUpdateResult('❌ Error de conexión con el servidor.');
+    } finally {
+      setProcessingImages(false);
     }
   };
 
@@ -271,6 +321,56 @@ export default function AdminGames() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/*  BOT DE AUTOMATIZACIÓN DE IMÁGENES */}
+      <div className="mt-10 p-6 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl border border-indigo-400/30">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-white/20 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg">Automatización de Portadas (RAWG)</h3>
+            <p className="text-indigo-100 text-sm">Actualiza las imágenes de todos los juegos automáticamente.</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="Pega tu API Key de RAWG aquí..."
+            value={rawgApiKey}
+            onChange={(e) => setRawgApiKey(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+          />
+          <button
+            onClick={handleAutoUpdateImages}
+            disabled={processingImages || !rawgApiKey}
+            className="px-6 py-3 bg-white text-indigo-700 font-bold rounded-lg hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+          >
+            {processingImages ? (
+              <>
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Auto-Actualizar Imágenes
+              </>
+            )}
+          </button>
+        </div>
+
+        {imageUpdateResult && (
+          <div className="mt-4 p-3 bg-black/20 rounded-lg text-white text-sm font-medium backdrop-blur-sm border border-white/10">
+            {imageUpdateResult}
+          </div>
+        )}
       </div>
 
       {/* Modal Form */}
