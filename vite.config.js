@@ -11,5 +11,13 @@ export default defineConfig({
     hmr: {
       port: 3000,
     },
+    // ✅ Proxy agregado para evitar errores de CORS con TronScan en desarrollo
+    proxy: {
+      '/api/tronscan': {
+        target: 'https://apilist.tronscanapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/tronscan/, ''),
+      },
+    },
   },
 });
