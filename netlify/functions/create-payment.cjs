@@ -20,14 +20,16 @@ exports.handler = async function (event) {
         price_currency: 'usd',
         pay_currency: 'usdttrc20',
         order_id: order_id,
-        ipn_callback_url: '', 
+        // ✅ Removemos ipn_callback_url completamente
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Error al crear el pago');
+      // Mostrar el error detallado de NowPayments
+      console.error('NowPayments API Error:', data);
+      throw new Error(data.message || `Error ${response.status}: ${JSON.stringify(data)}`);
     }
 
     return {
@@ -44,7 +46,10 @@ exports.handler = async function (event) {
     console.error('Error en create-payment:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: error.message }),
+      body: JSON.stringify({ 
+        success: false, 
+        message: error.message || 'Error interno del servidor' 
+      }),
     };
   }
 };
