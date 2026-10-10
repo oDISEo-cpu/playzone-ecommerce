@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, XCircle, CreditCard, Wallet } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, CreditCard, Wallet, Copy } from 'lucide-react';
 import { useStore } from '../../store';
 
 export default function AdminOrders() {
@@ -34,6 +34,16 @@ export default function AdminOrders() {
 
   const handleStatusChange = (orderId: string, newStatus: 'COMPLETED' | 'FAILED') => {
     updateOrderStatus(orderId, newStatus);
+  };
+
+  // ✅ Función para limpiar y recortar el TX ID
+  const formatTxId = (txId: string) => {
+    if (!txId) return '';
+    // Si es muy largo (como el código pegado por error), lo recorta a 30 caracteres
+    if (txId.length > 30) {
+      return `${txId.substring(0, 30)}...`;
+    }
+    return txId;
   };
 
   return (
@@ -114,10 +124,25 @@ export default function AdminOrders() {
 
               {/* Footer */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-[#E5E5E5] dark:border-[#1E293B]">
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                   <p>Fecha: {new Date(order.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                   {order.transactionId && (
-                    <p className="mt-1">TX: <code className="bg-gray-100 dark:bg-[#0B1120] px-1 rounded transition-colors">{order.transactionId}</code></p>
+                    <div className="flex items-center gap-2">
+                      <span>TX:</span>
+                      <code className="bg-gray-100 dark:bg-[#0B1120] px-2 py-1 rounded font-mono text-[#0070D1] dark:text-[#0070D1] text-xs break-all">
+                        {formatTxId(order.transactionId)}
+                      </code>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.transactionId || '');
+                          useStore.getState().addToast('TX copiado', 'success');
+                        }}
+                        className="p-1 hover:bg-gray-200 dark:hover:bg-[#1E293B] rounded transition-colors"
+                        title="Copiar TX completo"
+                      >
+                        <Copy className="w-3 h-3 text-gray-500" />
+                      </button>
+                    </div>
                   )}
                 </div>
                 {order.paymentStatus === 'PENDING' && (

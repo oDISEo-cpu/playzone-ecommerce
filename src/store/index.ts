@@ -191,8 +191,14 @@ export const useStore = create<AppState>()(
 
       loadGames: async () => {
         set({ isLoadingGames: true });
-        const games = await fetchGames();
-        set({ games, isLoadingGames: false });
+        try {
+          const games = await fetchGames();
+          set({ games, isLoadingGames: false });
+        } catch (error) {
+          console.error('Error loading games:', error);
+          set({ isLoadingGames: false });
+          get().addToast('Error al cargar los juegos', 'error');
+        }
       },
 
       addGame: async (game) => {
@@ -211,6 +217,9 @@ export const useStore = create<AppState>()(
           ...game,
           imageUrl,
           videoUrl,
+          isHeroBanner: game.isHeroBanner || false,
+          isPreOrder: game.isPreOrder || false,
+          releaseDate: game.releaseDate || '',
         });
 
         if (newGame) {
@@ -457,6 +466,7 @@ export const useStore = create<AppState>()(
         cart: state.cart,
         orders: state.orders,
         storeSettings: state.storeSettings,
+        // NO incluimos games porque vienen de Supabase
       }),
     }
   )
