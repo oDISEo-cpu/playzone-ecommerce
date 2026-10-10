@@ -20,7 +20,7 @@ exports.handler = async function (event) {
       };
     }
 
-    // 1. Obtener TODOS los juegos (esto es rápido)
+    // 1. Obtener TODOS los juegos
     const gamesResponse = await fetch(`${supabaseUrl}/rest/v1/games?select=id,title`, {
       headers: {
         'apikey': supabaseKey,
@@ -51,16 +51,16 @@ exports.handler = async function (event) {
     let notFound = 0;
     let errors = 0;
 
-    // 3. Procesar este lote en paralelo (máximo 5 a la vez para no saturar RAWG)
+    // 3. Procesar este lote en paralelo (máximo 5 a la vez)
     const concurrencyLimit = 5;
     for (let i = 0; i < gamesChunk.length; i += concurrencyLimit) {
       const batch = gamesChunk.slice(i, i + concurrencyLimit);
       
       await Promise.all(batch.map(async (game) => {
         try {
-          // Búsqueda exacta para mayor precisión y velocidad
+          // ✅ BÚSQUEDA FLEXIBLE (sin search_exact) para encontrar más coincidencias
           const rawgResponse = await fetch(
-            `https://api.rawg.io/api/games?key=${rawgKey}&search=${encodeURIComponent(game.title)}&search_exact=true&page_size=1`
+            `https://api.rawg.io/api/games?key=${rawgKey}&search=${encodeURIComponent(game.title)}&page_size=1`
           );
 
           if (!rawgResponse.ok) {
@@ -94,7 +94,7 @@ exports.handler = async function (event) {
         }
       }));
 
-      // Pequeña pausa entre lotes internos
+      // Pequeña pausa entre lotes internos para ser amables con la API
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
